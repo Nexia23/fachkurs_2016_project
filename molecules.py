@@ -10,14 +10,14 @@ class BioMolecule:
     @type name: str
     @type mass: float
     """
-    def __init__(self, mid, name, mass=0):
-        self.__mid = mid
+    def __init__(self,  name, mass=0):
+        #self.__mid = mid
         self.name = name
         self.mass = mass
 
-    @property
-    def id(self):
-        return self.__mid
+    # @property
+    # def id(self):
+    #     return self.__mid
 
     @property
     def name(self):
@@ -51,8 +51,8 @@ class Polymer(BioMolecule):
     @type sequence: str
     @type mass: float
     """
-    def __init__(self, mid, name, sequence, mass=0):
-        super().__init__(mid, name, mass)
+    def __init__(self, name, sequence, mass=0):
+        super().__init__(name, mass)
         self._sequence = sequence
 
     def __getitem__(self, value):
@@ -60,6 +60,14 @@ class Polymer(BioMolecule):
 
     def __setitem__(self, key, value):
         self.sequence[key] = value
+
+    def __repr__(self):
+        #todo: each molecule class should have something like this
+        pass
+
+    def __str__(self):
+        #todo: each class should have something like this
+        pass
 
     @property
     def sequence(self):
@@ -74,8 +82,8 @@ class Polymer(BioMolecule):
 
 
 class BioMoleculeCount(BioMolecule):
-    def __init__(self, mid, name, count=0):
-        super().__init__(mid, name)
+    def __init__(self, name, count=0):
+        super().__init__(name)
         self.count = count
 
     @property
@@ -88,9 +96,17 @@ class BioMoleculeCount(BioMolecule):
 
 
 class MRNA(Polymer):
-    def __init__(self, mid, name, sequence, mass=0):
-        super().__init__(mid, name, sequence, mass)
-        self.binding = [0]*(len(sequence)//3)
+    def __init__(self, name, sequence, mass=0):
+        super().__init__(name, sequence, mass)
+        self.sequence_triplet_binding = [0]*(len(sequence)//3)
+
+    def __repr__(self):
+        #todo: each molecule class should have something like this
+        pass
+
+    def __str__(self):
+        #todo: each class should have something like this
+        pass
 
     def calculate_mass(self):
         self.mass = 0
@@ -116,12 +132,20 @@ class Protein(Polymer):
     """
     number_of_proteins = 0
 
-    def __init__(self, mid, name, sequence, mass=0):
-        super().__init__(mid, name, sequence, mass)
+    def __init__(self, name, sequence, mass=0):
+        super().__init__(name, sequence, mass)
         self.number_of_proteins += 1
 
     def __add__(self, AS):
         self.sequence += AS
+
+    def __repr__(self):
+        #todo: each molecule class should have something like this
+        pass
+
+    def __str__(self):
+        #todo: each class should have something like this
+        pass
 
     def calculate_mass(self):
         AA_mass = dict(A=89.0929, R=175.208, N=132.118, D=132.094, C=121.158, Q=146.144, E=146.121, G=75.0664,
@@ -145,9 +169,16 @@ class Ribosome(BioMoleculeCount):
     ribosome and the finished protein is returned.
     """
 
-    def __init__(self, mid, name, count=0):
-        super().__init__(mid, name, count)
+    def __init__(self, name, count=0):
+        super().__init__(name, count)
 
+    def __repr__(self):
+        #todo: each molecule class should have something like this
+        pass
+
+    def __str__(self):
+        #todo: each class should have something like this
+        pass
 
 class Polymerase(BioMoleculeCount):
     """

@@ -21,3 +21,17 @@ class Process(metaclass=ABCMeta):
         Has to be implemented by child class.
         """
         pass
+
+    @abstractmethod
+    def __repr__(self):
+        """
+        Has to be implemented by child class.
+        """
+        pass
+
+    @abstractmethod
+    def __str__(self):
+        """
+        Has to be implemented by child class.
+        """
+        pass

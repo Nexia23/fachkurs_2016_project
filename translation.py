@@ -32,7 +32,18 @@ class Translation(processes.Process):
     def __init__(self, id, name):
         # call the constructor of the base class (processes.Process in this case)
         super().__init__(id, name)
-        self.ribosomes = molecules.Ribosome('ribo', 'ribosome', 1)
+        self.__initiat_ribosomes()
+
+    def __repr__(self):
+        #todo: each process class should have something like this
+        pass
+
+    def __str__(self):
+        #todo: each process class should have something like this
+        pass
+
+    def __initiat_ribosomes(self):
+        self.ribosomes = molecules.Ribosome('Ribosome', 1)
 
     def update(self, model):
         """
@@ -42,15 +53,15 @@ class Translation(processes.Process):
         for mrna_id in self.substrate_ids:
             prot = None
             mrna = model.states[mrna_id]
-            if not mrna.binding[0]:
+            if not mrna.sequence_triplet_binding[0]:
                 self.initiate(mrna)
             else:
                 prot = self.elongate(mrna)
             if isinstance(prot, molecules.Protein):
-                if prot.id in model.states:
-                    model.states[prot.id].append(prot)
+                if prot.name in model.states:
+                    model.states[prot.name].append(prot)
                 else:
-                    model.states[prot.id] = [prot]
+                    model.states[prot.name] = [prot]
 
     def initiate(self, mrna):
         """
@@ -58,12 +69,11 @@ class Translation(processes.Process):
 
         @type mrna: MRNA
         """
-        if not mrna.binding[0]:  #  no ribosome bound yet and target mrna still free at pos 0
+        if not mrna.sequence_triplet_binding[0]:  #  no ribosome bound yet and target mrna still free at pos 0
             # bind a nascent protein to the 0 codon
             if numpy.random.poisson(self.ribosomes.count) > 1: # at least one binding event happens in time step
-                mrna.binding[0] = molecules.Protein("Protein_{0}".format(mrna.id),
-                                                     "Protein_{0}".format(mrna.id),
-                                                     "")
+                mrna.sequence_triplet_binding[0] = molecules.Protein("Protein_{0}".format(mrna.name.split("_")[-1]),
+                                                                     "")
                 self.ribosomes.count -= 1
 
     def elongate(self, mrna):
@@ -74,25 +84,25 @@ class Translation(processes.Process):
 
         @type return: Protein or False
         """
-        for i, ribosome in enumerate(mrna.binding):
+        for i, ribosome in enumerate(mrna.sequence_triplet_binding):
             if isinstance(ribosome, molecules.Protein):
                 codon = mrna[i*3:i*3+3]
                 aa = self.code[codon]
                 if aa == "*": # terminate at stop codon
                     return self.terminate(mrna, i)
-                if i+1 >= len(mrna.binding):
+                if i+1 >= len(mrna.sequence_triplet_binding):
                     return self.terminate(mrna, i) # terminate if mrna ends
-                if not mrna.binding[i + 1]: # if the next rna position is free
-                    mrna.binding[i] + aa
-                    mrna.binding[i + 1] = mrna.binding[i]
-                    mrna.binding[i] = 0
+                if not mrna.sequence_triplet_binding[i + 1]: # if the next rna position is free
+                    mrna.sequence_triplet_binding[i] + aa
+                    mrna.sequence_triplet_binding[i + 1] = mrna.sequence_triplet_binding[i]
+                    mrna.sequence_triplet_binding[i] = 0
         return 0
 
     def terminate(self, mrna, i):
         """
         Splits the ribosome/MRNA complex and returns a protein.
         """
-        protein = mrna.binding[i] # bound mRNA
-        mrna.binding[i] = 0
+        protein = mrna.sequence_triplet_binding[i] # bound mRNA
+        mrna.sequence_triplet_binding[i] = 0
         self.ribosomes.count += 1
         return protein

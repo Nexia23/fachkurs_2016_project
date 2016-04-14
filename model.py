@@ -1,3 +1,5 @@
+import sys
+
 import translation
 import molecules as mol
 import modeldata
@@ -29,7 +31,6 @@ class SimulationResult:
     handles and stores a simulation result for one species
     """
     def __init__(self, species):
-        self.id = species.id
         self.name = species.name
         self.value = []
         self.time = []
@@ -48,26 +49,38 @@ class Model:
         self.states = {}
         self.processes = {}
         self.timestep = 0
+        self.mrnas = {}  # all selfs should be initialized in the constructor
+        self.ribosomes = {}
         self.volume = 1
         self.db = modeldata.ModelData()
+
+        # ribosomes
+        self.__initialize_ribosomes()
+        # mRNAs
+        self.__initialize_mRNA()
+
         self.__initialize_states()
         self.__initialize_processes()
-        self.results = Output(self)
+        self.results = Output(self)  #
+
+    def __initialize_ribosomes(self):
+        self.ribosomes = {'Ribosomes': mol.Ribosome('Ribosomes', 10)}
+
+    def __initialize_mRNA(self):
+        # I think to have a function for each molecule state generation is more intuitive and less error prone
+
+        for i, mrna in enumerate(self.db.get_mRNA_states()):
+            name, sequence = mrna
+            self.mrnas[name] = mol.MRNA(name, sequence)
 
     def __initialize_states(self):
         """
         initialize the different states
         """
-        # ribosomes
-        self.ribosomes = {'Ribosomes': mol.Ribosome('Ribosomes', 'Ribosomes', 10)}
-        self.states.update(self.ribosomes)
 
-        # mRNAs
-        self.mrnas = {}
-        for i, mrna in enumerate(self.db.get_states(mol.MRNA)):
-            id, name, sequence = mrna
-            self.mrnas['mRNA_{0}_{1}'.format(id, i)] = mol.MRNA(id, name, sequence)
+        self.states.update(self.ribosomes)
         self.states.update(self.mrnas)
+
 
     def __initialize_processes(self):
         trsl = translation.Translation(1, "Translation")

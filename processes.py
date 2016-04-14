@@ -1,4 +1,6 @@
-class Process(object):
+from abc import ABCMeta, abstractmethod
+
+class Process(metaclass=ABCMeta):
     """
     Parent for all cellular processes.
     """
@@ -13,6 +15,7 @@ class Process(object):
         self.enzyme_ids = enzyme_ids
         self.substrate_ids = substrate_ids
 
+    @abstractmethod
     def update(self, model):
         """
         Has to be implemented by child class.

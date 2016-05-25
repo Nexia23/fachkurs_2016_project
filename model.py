@@ -1,5 +1,43 @@
-import processes as proc
+import modeldata
 import molecules as mol
+import translation
+
+
+class Output:
+    """
+    class for handling the simulation results of the different species types
+    """
+
+    def __init__(self, model):
+        self.meta = {}
+        self.model = model
+        self.timecourses = {state: SimulationResult(model.states[state]) for state in model.states}
+
+    def add_timepoint(self, species):
+        """
+        add a simulation time point for one species
+        @param species: mol.BioMolecule
+        @return: None
+        """
+        if isinstance(self.model.states[species], mol.Polymer):
+            pass  # TODO: implement a useful method for Polymers
+        elif isinstance(self.model.states[species], mol.BioMoleculeCount):
+            self.timecourses[species].add_timepoint(self.model.states[species].count, self.model.timestep)
+
+
+class SimulationResult:
+    """
+    handles and stores a simulation result for one species
+    """
+
+    def __init__(self, species):
+        self.name = species.name
+        self.value = []
+        self.time = []
+
+    def add_timepoint(self, time, value):
+        self.value.append(value)
+        self.time.append(time)
 
 
 class Model:
@@ -10,17 +48,42 @@ class Model:
     def __init__(self):
         self.states = {}
         self.processes = {}
+        self.timestep = 0
+        self.mrnas = {}  # all selfs should be initialized in the constructor
+        self.ribosomes = {}
+        self.volume = 1
+        self.db = modeldata.ModelData()
 
-        # initiate states
-        self.ribosomes = {'Ribosomes': mol.Ribosome('Ribosomes', 'Ribosomes', 10)}
-        self.mrnas = {'MRNA_{0}'.format(i): mol.MRNA(i, 'MRNA_{0}'.format(i), "UUUUUUUUUUAA") for i in range(50)}
+        # ribosomes
+        self.__initialize_ribosomes()
+        # mRNAs
+        self.__initialize_mRNA()
+
+        self.__initialize_states()
+        self.__initialize_processes()
+        self.results = Output(self)  #
+
+    def __initialize_ribosomes(self):
+        self.ribosomes = {'Ribosomes': mol.Ribosome('Ribos', 'Ribosomes', 10)}
+
+    def __initialize_mRNA(self):
+        # I think to have a function for each molecule state generation is more intuitive and less error prone
+        for i, mrna in enumerate(self.db.get_states(mol.MRNA)):
+            mid, name, sequence = mrna
+            self.mrnas[mid] = mol.MRNA(mid, name, sequence)
+
+    def __initialize_states(self):
+        """
+        initialize the different states
+        """
+
         self.states.update(self.ribosomes)
         self.states.update(self.mrnas)
 
-        # initiate processes
-        translation = proc.Translation(1, "Translation")
-        translation.set_states(self.mrnas.keys(), self.ribosomes.keys())
-        self.processes = {"Translation": translation}
+    def __initialize_processes(self):
+        trsl = translation.Translation(1, "Translation")
+        trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())
+        self.processes = {"Translation": trsl}
 
     def step(self):
         """
@@ -29,6 +92,11 @@ class Model:
         """
         for p in self.processes:
             self.processes[p].update(self)
+
+        for state in self.states:
+            self.results.add_timepoint(state)
+
+        self.timestep += 1
 
     def simulate(self, steps, log=True):
         """
@@ -39,7 +107,7 @@ class Model:
             self.step()
             if log:  # This could be an entry point for further logging
                 # print count of each protein to the screen
-                print('\r{}'.format([len(self.states[x]) for x in self.states.keys() if "Protein_" in x]), end='')
+                print('\r{}'.format([len(self.states[x]) for x in self.states.keys() if "Protein" in x]), end='')
 
 
 if __name__ == "__main__":

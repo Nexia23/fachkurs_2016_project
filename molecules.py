@@ -1,23 +1,27 @@
 __author__ = 'max'
 
 
-class BioMolecule(object):
+class BioMolecule:
     """
-    A generic molecule that has basic attributes like id, name and
+    A generic molecule that has basic attributes like name and
     mass.
 
-    @type mid: int
     @type name: str
     @type mass: float
     """
+
     def __init__(self, mid, name, mass=0):
-        self.__mid = mid
+        self.mid = mid
         self.name = name
         self.mass = mass
 
     @property
-    def id(self):
+    def mid(self):
         return self.__mid
+
+    @mid.setter
+    def mid(self, value):
+        self.__mid = value
 
     @property
     def name(self):
@@ -40,20 +44,27 @@ class BioMolecule(object):
         else:
         self.__mass = value
 
+    def __repr__(self):
+        return ','.join([self.name, str(type(self))])
+
+    def __str__(self):
+        # todo: each class should have something like this
+        pass
+
 
 class Polymer(BioMolecule):
     """
     A polymer molecule that has a sequence attribute which is
     accessible via indexing the object.
 
-    @type mid: int
     @type name: str
     @type sequence: str
     @type mass: float
     """
+
     def __init__(self, mid, name, sequence, mass=0):
-        super(Polymer, self).__init__(mid, name, mass)
-        self._sequence = sequence
+        super().__init__(mid, name, mass)
+        self.__sequence = sequence
 
     def __getitem__(self, value):
         return self.sequence[value]
@@ -63,19 +74,19 @@ class Polymer(BioMolecule):
 
     @property
     def sequence(self):
-        return self._sequence
+        return self.__sequence
 
     @sequence.setter
     def sequence(self, value):
         if not isinstance(value, str):
             raise Exception("sequence must be a string")
             # TODO: check for valid nucleotides here
-        self._sequence = value.upper()
+        self.__sequence = value.upper()
 
 
 class BioMoleculeCount(BioMolecule):
     def __init__(self, mid, name, count=0):
-        super(BioMoleculeCount, self).__init__(mid, name)
+        super().__init__(mid, name)
         self.count = count
 
     @property
@@ -89,12 +100,12 @@ class BioMoleculeCount(BioMolecule):
 
 class MRNA(Polymer):
     def __init__(self, mid, name, sequence, mass=0):
-        super(MRNA, self).__init__(mid, name, sequence, mass)
-        self.binding = [0]*(len(sequence)//3)
+        super().__init__(mid, name, sequence, mass)
+        self.sequence_triplet_binding = [0] * (len(sequence) // 3)
 
     def calculate_mass(self):
         self.mass = 0
-        NA_mass = {'A': 1.0, 'U': 2.2, 'G':2.1, 'C':1.3}
+        NA_mass = {'A': 1.0, 'U': 2.2, 'G': 2.1, 'C': 1.3}
         for na in self.sequence:
             self.mass += NA_mass[na]
 
@@ -117,11 +128,11 @@ class Protein(Polymer):
     number_of_proteins = 0
 
     def __init__(self, mid, name, sequence, mass=0):
-        super(Protein, self).__init__(mid, name, sequence, mass)
-        self.number_of_proteins += 1
+        super().__init__(mid, name, sequence, mass)
 
-    def __add__(self, AS):
-        self.sequence += AS
+    def __iadd__(self, AS):
+        self.sequence = self.sequence + AS
+        return self
 
     def calculate_mass(self):
         AA_mass = dict(A=89.0929, R=175.208, N=132.118, D=132.094, C=121.158, Q=146.144, E=146.121, G=75.0664,
@@ -146,7 +157,7 @@ class Ribosome(BioMoleculeCount):
     """
 
     def __init__(self, mid, name, count=0):
-        super(Ribosome, self).__init__(mid, name, count)
+        super().__init__(mid, name, count)
 
 
 class Polymerase(BioMoleculeCount):

@@ -33,11 +33,11 @@ class BioMolecule(object):
 
     @mass.setter
     def mass(self, value):
-        # if self.mass and \
-        #    not isinstance(value, float) or \
-        #    not isinstance(value, int):
-        #     raise Exception("mass must be numeric")
-        # else:
+        if self.mass and \
+           not isinstance(value, float) or \
+           not isinstance(value, int):
+            raise Exception("mass must be numeric")
+        else:
         self.__mass = value
 
 

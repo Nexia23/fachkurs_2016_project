@@ -42,9 +42,9 @@ class BioMolecule:
     def __repr__(self): #string "self.name,type"		#print(list(object))
         return ','.join([self.name, str(type(self))])
 
-    def __str__(self):	#print(object)
+   # def __str__(self):	#print(object)
         # todo: each class should have something like this
-        pass
+ #       pass
 
 
 class Polymer(BioMolecule):

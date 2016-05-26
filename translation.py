@@ -129,7 +129,7 @@ class Translation(processes.Process):
                     mrna.sequence_triplet_binding[i + 1] = mrna.sequence_triplet_binding[i]
                     mrna.sequence_triplet_binding[i] = 0
         return 0
-
+    
     def terminate(self, mrna, i):
         """
         Splits the ribosome/MRNA complex and returns a protein.
@@ -138,3 +138,27 @@ class Translation(processes.Process):
         mrna.sequence_triplet_binding[i] = 0
         self.ribosomes.count += 1
         return protein
+    
+
+    def entkoppeln(self, mrna, i):      #Funktion die Entkoppelt
+        if i < 10:
+             k=0
+            while k <= i:
+                mrna.sequence_triplet_binding[k] = 0
+
+        elif i =>10:
+            mrna.sequence_triplet_binding[i-10]=0
+
+
+    def occupy(self, mrna, i):        #Funktion die Besetzung einrichtet
+
+        if i < 10:
+            k=0
+            while k <= i:
+                mrna.sequence_triplet_binding[k] = 1
+
+        elif i =>10:
+            mrna.sequence_triplet_binding[i-10] = 'R'
+
+            
+

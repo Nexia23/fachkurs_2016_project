@@ -32,7 +32,7 @@ class Translation(processes.Process):
     def __init__(self, id, name):
         # call the constructor of the base class (processes.Process in this case)
         super().__init__(id, name)
-        self.__initiate_ribosomes()
+        self.__initiate_ribosomes()     #initiating one Ribosome
 
     def __repr__(self):
         # todo: each process class should have something like this
@@ -49,15 +49,16 @@ class Translation(processes.Process):
         """
         Update all mrnas and translate proteins.
         """
-        self.ribosomes = model.states[list(self.enzyme_ids)[0]]
-        for mrna_id in self.substrate_ids:
+        #enzymes_id -> the only one initialized ribosome
+        self.ribosomes = model.states[list(self.enzyme_ids)[0]] # call in the dictionary states for the Ribsosome-object
+        for mrna_id in self.substrate_ids:          #substrate should be a list for ids of all mrnas
             prot = None
-            mrna = model.states[mrna_id]
+            mrna = model.states[mrna_id]            #object of mRNA
             if not mrna.sequence_triplet_binding[0]:
                 self.initiate(mrna)
             else:
                 prot = self.elongate(mrna)
-            if isinstance(prot, molecules.Protein):
+            if isinstance(prot, molecules.Protein):     #storing the protein in the states-dictionary
                 if prot.name in model.states:
                     model.states[prot.name].append(prot)
                 else:

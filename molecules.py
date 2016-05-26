@@ -11,7 +11,7 @@ class BioMolecule:
     """
 
     def __init__(self, mid, name, mass=0):
-        self.mid = mid
+        self.mid = mid                      #id ?
         self.name = name
         self.mass = mass
 
@@ -39,7 +39,7 @@ class BioMolecule:
     def mass(self, value):
         self.__mass = value
 
-    def __repr__(self):
+    def __repr__(self): #string "self.name,type"
         return ','.join([self.name, str(type(self))])
 
     def __str__(self):
@@ -79,7 +79,7 @@ class Polymer(BioMolecule):
         self.__sequence = value.upper()
 
 
-class BioMoleculeCount(BioMolecule):
+class BioMoleculeCount(BioMolecule):        #new variable: number of molecules of this type
     def __init__(self, mid, name, count=0):
         super().__init__(mid, name)
         self.count = count

@@ -53,15 +53,31 @@ class Translation(processes.Process):
         for mrna_id in self.substrate_ids:
             prot = None
             mrna = model.states[mrna_id]
+
+            # ribosomen "arbeiten"
             if not mrna.sequence_triplet_binding[0]:
-                self.initiate(mrna)
-            else:
-                prot = self.elongate(mrna)
+                self.initiate(mrna)  # TODO:FIXME aufruf self.bind() anstatt initate
+            else:  # TODO:FIXME kein else, kann initialisieren UND elongieren in einem Zeitschritt
+                prot = self.elongate(mrna)  # TODO:FIXME aufruf self.move() anstatt elongate
+
+            # wenn protein enstanden, in Listen aufnehmen    
             if isinstance(prot, molecules.Protein):
                 if prot.name in model.states:
                     model.states[prot.name].append(prot)
                 else:
                     model.states[prot.name] = [prot]
+
+    def bind(self):
+        # kann self.initiate() oder self.move() aufrufen
+        # ribosomenanzahl um 1 reduzieren
+        pass
+
+    def move(self):
+        # Ribosom läuft auf mRNA ohne protein synthese
+        # ruft initiate auf, wenn start codon erreicht
+        # ribosom fällt ab, wenn mRNA Ende erreicht
+        # ruft self.elongate() auf
+        pass
 
     def initiate(self, mrna):
         """

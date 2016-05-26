@@ -57,9 +57,9 @@ class Translation(processes.Process):
             mrna = model.states[mrna_id]            #object of mRNA
 
             # ribosomen "arbeiten"
-            if not mrna.sequence_triplet_binding[0]:
-                self.initiate(mrna)  # TODO:FIXME aufruf self.bind() anstatt initate
-            else:  # TODO:FIXME kein else, kann initialisieren UND elongieren in einem Zeitschritt
+            if mrna.sequence_triplet_binding[0] == 0:
+                self.bind(mrna)  
+                self.move(mrna)
                 prot = self.elongate(mrna)  # TODO:FIXME aufruf self.move() anstatt elongate
                 
              # wenn protein enstanden, in Listen aufnehmen  
@@ -69,12 +69,23 @@ class Translation(processes.Process):
                 else:
                     model.states[prot.name] = [prot]
 
-    def bind(self):
-        # kann self.initiate() oder self.move() aufrufen
-        # ribosomenanzahl um 1 reduzieren
-        pass
+    def bind(self, mrna):
+		"""
+		Bind to 5'-end of mRNA --> initiate / move without protein synthesis
+		"""
+		if numpy.random.poisson(self.ribosomes.count) > 1:  # at least one binding event happens in time step
+    		mrna.sequence_triplet_binding[0] = 1
+    		if mrna.sequence[0:3]=='AUG':
+				self.initiate(mrna)
+
+        	self.ribosomes.count -= 1
 
     def move(self):
+    	"""
+    	move not initiated ribosomes
+    	"""
+    	# for codon in mrna.sequence_triplet_binding:
+    		# if 
         # Ribosom läuft auf mRNA ohne protein synthese
         # ruft initiate auf, wenn start codon erreicht
         # ribosom fällt ab, wenn mRNA Ende erreicht
@@ -87,13 +98,11 @@ class Translation(processes.Process):
 
         @type mrna: MRNA
         """
-        if not mrna.sequence_triplet_binding[0]:  # no ribosome bound yet and target mrna still free at pos 0
-            # bind a nascent protein to the 0 codon
-            if numpy.random.poisson(self.ribosomes.count) > 1:  # at least one binding event happens in time step
-                mrna.sequence_triplet_binding[0] = molecules.Protein("Protein_{}".format(mrna.mid),
+
+        mrna.sequence_triplet_binding[0] = molecules.Protein("Protein_{}".format(mrna.mid),
                                                                      "Protein_{0}".format(mrna.name.split("_")[-1]),
                                                                      "",)
-                self.ribosomes.count -= 1
+ 
 
     def elongate(self, mrna):
         """

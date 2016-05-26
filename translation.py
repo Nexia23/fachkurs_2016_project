@@ -36,11 +36,12 @@ class Translation(processes.Process):
 
     def __repr__(self):
         # todo: each process class should have something like this
-        pass
+        return ','.join([self.name, str(type(self))])
 
     def __str__(self):
         # todo: each process class should have something like this
-        pass
+        return ','.join([self.name, str(type(self))])
+
 
     def __initiate_ribosomes(self):
         self.ribosomes = molecules.Ribosome('Ribosomes', 'Ribosome', 1)
@@ -50,13 +51,16 @@ class Translation(processes.Process):
         Update all mrnas and translate proteins.
         """
         self.ribosomes = model.states[list(self.enzyme_ids)[0]]
+
         for mrna_id in self.substrate_ids:
             prot = None
             mrna = model.states[mrna_id]
+
             if not mrna.sequence_triplet_binding[0]:
                 self.initiate(mrna)
             else:
                 prot = self.elongate(mrna)
+                
             if isinstance(prot, molecules.Protein):
                 if prot.name in model.states:
                     model.states[prot.name].append(prot)
@@ -87,12 +91,16 @@ class Translation(processes.Process):
         """
         for i, ribosome in enumerate(mrna.sequence_triplet_binding):
             if isinstance(ribosome, molecules.Protein):
+
                 codon = mrna[i * 3:i * 3 + 3]
                 aa = self.code[codon]
+
                 if aa == "*":  # terminate at stop codon
                     return self.terminate(mrna, i)
+
                 if i + 1 >= len(mrna.sequence_triplet_binding):
                     return self.terminate(mrna, i)  # terminate if mrna ends
+
                 if not mrna.sequence_triplet_binding[i + 1]:  # if the next rna position is free
                     mrna.sequence_triplet_binding[i] += aa
                     mrna.sequence_triplet_binding[i + 1] = mrna.sequence_triplet_binding[i]

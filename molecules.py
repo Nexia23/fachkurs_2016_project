@@ -173,3 +173,39 @@ class RNAPolymeraseII(Polymerase):
     A polymerase that generates mRNAs from DNA sequences.
     """
     pass
+
+
+class Gene(BioMoleculeCount):
+
+    def __init__(self, mid, name, strand, count=0):
+        super().__init__(mid, name, count)
+        self.__location = None 
+        self.__chr  = None
+        self.__sequence = None 
+        self.sequence_binding=[0]*(end-start)
+
+
+    ###### COMMENT for DATA GROUP #######
+    #feel free to replace 'sequence'-information by start-, end-positions and strand (+/-)
+
+    ###### COMMENT FOR REPLICATION_GROUP #######
+    #count: 1 for unreplicated gene, 2 for copied gene 
+
+    @property
+    def location(self):
+        return self.__location
+
+    @property
+    def chr(self):
+        return self.__chr
+
+    @property
+    def sequence(self):
+        return self.__sequence
+        
+    @sequence.setter
+    def sequence(self, value):
+        if not isinstance(value, str):
+            raise Exception("sequence must be a string")
+            # TODO: check for valid nucleotides here
+        self.__sequence = value.upper()

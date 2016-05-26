@@ -70,22 +70,22 @@ class Translation(processes.Process):
                     model.states[prot.name] = [prot]
 
     def bind(self, mrna):
-		"""
-		Bind to 5'-end of mRNA --> initiate / move without protein synthesis
-		"""
-		if numpy.random.poisson(self.ribosomes.count) > 1:  # at least one binding event happens in time step
-    		mrna.sequence_triplet_binding[0] = 1
-    		if mrna.sequence[0:3]=='AUG':
-				self.initiate(mrna)
+        """
+        Bind to 5'-end of mRNA --> initiate / move without protein synthesis
+        """
+        if numpy.random.poisson(self.ribosomes.count) > 1:  # at least one binding event happens in time step
+            mrna.sequence_triplet_binding[0] = 1
+            if mrna.sequence[0:3]=='AUG':
+                self.initiate(mrna)
 
-        	self.ribosomes.count -= 1
+            self.ribosomes.count -= 1
 
-    def move(self):
-    	"""
-    	move not initiated ribosomes
-    	"""
-    	# for codon in mrna.sequence_triplet_binding:
-    		# if 
+    def move(self, mrna):
+        """
+        move not initiated ribosomes
+        """
+        # for codon in mrna.sequence_triplet_binding:
+            # if 
         # Ribosom läuft auf mRNA ohne protein synthese
         # ruft initiate auf, wenn start codon erreicht
         # ribosom fällt ab, wenn mRNA Ende erreicht
@@ -142,11 +142,11 @@ class Translation(processes.Process):
 
     def entkoppeln(self, mrna, i):      #Funktion die Entkoppelt
         if i < 10:
-             k=0
+            k=0
             while k <= i:
                 mrna.sequence_triplet_binding[k] = 0
 
-        elif i =>10:
+        elif i >=10:
             mrna.sequence_triplet_binding[i-10]=0
 
 
@@ -157,7 +157,7 @@ class Translation(processes.Process):
             while k <= i:
                 mrna.sequence_triplet_binding[k] = 1
 
-        elif i =>10:
+        elif i >= 10:
             mrna.sequence_triplet_binding[i-10] = 'R'
 
             

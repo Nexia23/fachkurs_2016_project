@@ -50,40 +50,20 @@ class Translation(processes.Process):
         """
         Update all mrnas and translate proteins.
         """
-<<<<<<< HEAD
-        self.ribosomes = model.states[list(self.enzyme_ids)[0]]
-
-        for mrna_id in self.substrate_ids:
-            prot = None
-            mrna = model.states[mrna_id]
-
-<<<<<<< HEAD
-            # ribosomen "arbeiten"
-            if not mrna.sequence_triplet_binding[0]:
-                self.initiate(mrna)  # TODO:FIXME aufruf self.bind() anstatt initate
-            else:  # TODO:FIXME kein else, kann initialisieren UND elongieren in einem Zeitschritt
-                prot = self.elongate(mrna)  # TODO:FIXME aufruf self.move() anstatt elongate
-
-            # wenn protein enstanden, in Listen aufnehmen    
-=======
-=======
         #enzymes_id -> the only one initialized ribosome
         self.ribosomes = model.states[list(self.enzyme_ids)[0]] # call in the dictionary states for the Ribsosome-object
         for mrna_id in self.substrate_ids:          #substrate should be a list for ids of all mrnas
             prot = None
             mrna = model.states[mrna_id]            #object of mRNA
->>>>>>> b175dd75d0aa1382179b9d56668269c2ebc09b61
+
+            # ribosomen "arbeiten"
             if not mrna.sequence_triplet_binding[0]:
-                self.initiate(mrna)
-            else:
-                prot = self.elongate(mrna)
-<<<<<<< HEAD
+                self.initiate(mrna)  # TODO:FIXME aufruf self.bind() anstatt initate
+            else:  # TODO:FIXME kein else, kann initialisieren UND elongieren in einem Zeitschritt
+                prot = self.elongate(mrna)  # TODO:FIXME aufruf self.move() anstatt elongate
                 
->>>>>>> fbeedac7e502267d4fdca1417c91e1fc4793051c
-            if isinstance(prot, molecules.Protein):
-=======
+             # wenn protein enstanden, in Listen aufnehmen  
             if isinstance(prot, molecules.Protein):     #storing the protein in the states-dictionary
->>>>>>> b175dd75d0aa1382179b9d56668269c2ebc09b61
                 if prot.name in model.states:
                     model.states[prot.name].append(prot)
                 else:

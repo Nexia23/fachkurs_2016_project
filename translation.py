@@ -32,15 +32,16 @@ class Translation(processes.Process):
     def __init__(self, id, name):
         # call the constructor of the base class (processes.Process in this case)
         super().__init__(id, name)
-        self.__initiate_ribosomes()
+        self.__initiate_ribosomes()     #initiating one Ribosome
 
     def __repr__(self):
         # todo: each process class should have something like this
-        pass
+        return ','.join([self.name, str(type(self))])
 
     def __str__(self):
         # todo: each process class should have something like this
-        pass
+        return ','.join([self.name, str(type(self))])
+
 
     def __initiate_ribosomes(self):
         self.ribosomes = molecules.Ribosome('Ribosomes', 'Ribosome', 1)
@@ -49,11 +50,14 @@ class Translation(processes.Process):
         """
         Update all mrnas and translate proteins.
         """
+<<<<<<< HEAD
         self.ribosomes = model.states[list(self.enzyme_ids)[0]]
+
         for mrna_id in self.substrate_ids:
             prot = None
             mrna = model.states[mrna_id]
 
+<<<<<<< HEAD
             # ribosomen "arbeiten"
             if not mrna.sequence_triplet_binding[0]:
                 self.initiate(mrna)  # TODO:FIXME aufruf self.bind() anstatt initate
@@ -61,7 +65,25 @@ class Translation(processes.Process):
                 prot = self.elongate(mrna)  # TODO:FIXME aufruf self.move() anstatt elongate
 
             # wenn protein enstanden, in Listen aufnehmen    
+=======
+=======
+        #enzymes_id -> the only one initialized ribosome
+        self.ribosomes = model.states[list(self.enzyme_ids)[0]] # call in the dictionary states for the Ribsosome-object
+        for mrna_id in self.substrate_ids:          #substrate should be a list for ids of all mrnas
+            prot = None
+            mrna = model.states[mrna_id]            #object of mRNA
+>>>>>>> b175dd75d0aa1382179b9d56668269c2ebc09b61
+            if not mrna.sequence_triplet_binding[0]:
+                self.initiate(mrna)
+            else:
+                prot = self.elongate(mrna)
+<<<<<<< HEAD
+                
+>>>>>>> fbeedac7e502267d4fdca1417c91e1fc4793051c
             if isinstance(prot, molecules.Protein):
+=======
+            if isinstance(prot, molecules.Protein):     #storing the protein in the states-dictionary
+>>>>>>> b175dd75d0aa1382179b9d56668269c2ebc09b61
                 if prot.name in model.states:
                     model.states[prot.name].append(prot)
                 else:
@@ -103,12 +125,16 @@ class Translation(processes.Process):
         """
         for i, ribosome in enumerate(mrna.sequence_triplet_binding):
             if isinstance(ribosome, molecules.Protein):
+
                 codon = mrna[i * 3:i * 3 + 3]
                 aa = self.code[codon]
+
                 if aa == "*":  # terminate at stop codon
                     return self.terminate(mrna, i)
+
                 if i + 1 >= len(mrna.sequence_triplet_binding):
                     return self.terminate(mrna, i)  # terminate if mrna ends
+
                 if not mrna.sequence_triplet_binding[i + 1]:  # if the next rna position is free
                     mrna.sequence_triplet_binding[i] += aa
                     mrna.sequence_triplet_binding[i + 1] = mrna.sequence_triplet_binding[i]

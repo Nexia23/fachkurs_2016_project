@@ -62,10 +62,10 @@ def creategene():
     orf_splitlist = orf_splitlist[1:]
 
     #unnesten
-    orf_splitlist = [x for i in orf_splitlist for x in i]
+    orf_splitlist_unnested = [x for i in orf_splitlist for x in i]
 
-    #geht nicht, eher mit unnesten (siehe unten)
-    gene_seq = orf_splitlist[1::2]
+  
+    gene_seq = orf_splitlist_unnested[1::2]
     
 
     #Gen ID

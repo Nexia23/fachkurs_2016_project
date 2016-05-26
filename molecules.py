@@ -11,7 +11,7 @@ class BioMolecule:
     """
 
     def __init__(self, mid, name, mass=0):
-        self.mid = mid
+        self.mid = mid                      #id ?
         self.name = name
         self.mass = mass
 
@@ -39,10 +39,10 @@ class BioMolecule:
     def mass(self, value):
         self.__mass = value
 
-    def __repr__(self):
+    def __repr__(self): #string "self.name,type"		#print(list(object))
         return ','.join([self.name, str(type(self))])
 
-    def __str__(self):
+    def __str__(self):	#print(object)
         # todo: each class should have something like this
         pass
 
@@ -79,7 +79,7 @@ class Polymer(BioMolecule):
         self.__sequence = value.upper()
 
 
-class BioMoleculeCount(BioMolecule):
+class BioMoleculeCount(BioMolecule):        #new variable: number of molecules of this type
     def __init__(self, mid, name, count=0):
         super().__init__(mid, name)
         self.count = count
@@ -160,11 +160,43 @@ class Polymerase(BioMoleculeCount):
     A polymerase that can elongate nucleotide molecules. This could be used to derive special
     RNA and DNA polymerases.
     """
-    pass
+
+    def __init__(self, mid, name, count=0):
+    	super().__init__(mid, name, count)
+   
 
 
 class RNAPolymeraseII(Polymerase):
     """
     A polymerase that generates mRNAs from DNA sequences.
     """
-    pass
+    def __init__(self, mid, name, count=0):
+    	super().__init__(mid, name, count)
+
+
+
+class Gene(BioMoleculeCount):
+
+    def __init__(self, mid, name, sequence, count=0):
+    	super().__init__(mid, name, count)
+    	self.__sequence=sequence
+    	self.sequence_binding=[0]*len(sequence)
+
+
+	###### COMMENT for DATA GROUP #######
+	#feel free to replace 'sequence'-information by start-, end-positions and strand (+/-)
+
+	###### COMMENT FOR REPLICATION_GROUP #######
+	#count: 1 for unreplicated gene, 2 for copied gene 
+
+    @property
+    def sequence(self):
+    	return self.__sequence
+
+    @sequence.setter
+    def sequence(self, value):
+    	if not isinstance(value, str):
+    		raise Exception("sequence must be a string")
+            # TODO: check for valid nucleotides here
+    	self.__sequence = value.upper()
+

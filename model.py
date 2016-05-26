@@ -46,11 +46,11 @@ class Model:
     """
 
     def __init__(self):
-        self.states = {}
-        self.processes = {}
+        self.states = {}        #dictionary with all molecules {Rib_name: Rib_object, mrna_ids: mrna_object, mrna2_id: ...}
+        self.processes = {}     #dictionary filled with all active processes
         self.timestep = 0
         self.mrnas = {}  # all selfs should be initialized in the constructor
-        self.ribosomes = {}
+        self.ribosomes = {} #dictionary will be filled with 10 Ribosomes
         self.volume = 1
         self.db = modeldata.ModelData()
 
@@ -71,18 +71,19 @@ class Model:
         for i, mrna in enumerate(self.db.get_states(mol.MRNA)):
             mid, name, sequence = mrna
             self.mrnas[mid] = mol.MRNA(mid, name, sequence)
+            #dict_mrnas[key] = newmRNA
 
     def __initialize_states(self):
         """
         initialize the different states
         """
 
-        self.states.update(self.ribosomes)
+        self.states.update(self.ribosomes)  #adding dictionaries to self.states
         self.states.update(self.mrnas)
 
     def __initialize_processes(self):
         trsl = translation.Translation(1, "Translation")
-        trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())
+        trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
         self.processes = {"Translation": trsl}
 
     def step(self):

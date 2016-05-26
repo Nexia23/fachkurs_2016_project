@@ -11,8 +11,13 @@ class Chromosome(object):
         self._length=length
         self._sequence=sequence
         self._revsequence=revsequence
-        self._fastname=fastaname
-    
+        self._fastaname=fastaname
+        chr1_fasta = open(self._fastaname)
+        chr1_list = chr1_fasta.read().splitlines()
+        chr1_header = chr1_list[0]
+        chr1_list[0] = ""
+        self._sequence = "".join(chr1_list)
+
     #add befehl   
     def __add__(self,chromosome):
         if not isinstance(chromosome,Chromosome):
@@ -51,12 +56,22 @@ class Chromosome(object):
             raise TypeError("RevSequence must be a String.")
         self._revsequence = value
         
+    @property
+    def fastaname(self):
+        return self._fastaname
+
+
+   
+
+
+
+
 # Objekte erstellen
 #objekte immer klein schrieben und vlt auch abkürzen -> Chromosome1 = chr1
 
 def createchromosome():
     
-    chr1=Chromosome(1,0,"deinema","","fsa_sequences/S288C_Chromosome I.fsa")
+    chr1=Chromosome(1,0,"","","fsa_sequences/S288C_Chromosome I.fsa")
     chr2=Chromosome(2,0,"","","fsa_sequences/S288C_Chromosome II.fsa")
     chr3=Chromosome(3,0,"","","fsa_sequences/S288C_Chromosome III.fsa")
     chr4=Chromosome(4,0,"","","fsa_sequences/S288C_Chromosome IV.fsa")

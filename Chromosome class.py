@@ -12,10 +12,11 @@ class Chromosome(object):
         self._fastaname=fastaname
         
         #einlesen des files, löschen des headers, zusammenfügen der einzelnen zeilen als einzelnen string der als sequence abgespeichert wird
-        chr1_fasta = open(self._fastaname)
-        chr1_list = chr1_fasta.read().splitlines()
-        chr1_list[0] = ""
-        self._sequence = "".join(chr1_list)
+        with open(self._fastaname) as chr_fasta:
+            chr_list = chr_fasta.read().splitlines() 
+
+        chr_list[0] = ""
+        self._sequence = "".join(chr_list)
 
     #add befehl   
     def __add__(self,chromosome):

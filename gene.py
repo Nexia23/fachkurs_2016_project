@@ -39,47 +39,35 @@ class Gene(BioMoleculeCount):
 
 def creategene():
 
-    #open the file
-    orf_fasta = open("fsa_sequences/orf_coding.fasta")
-    #read the file in and create a list, where each element is a gen with header+sequence
-    orf_list = orf_fasta.read()
-    orf_list = orf_list.replace("i>", "").replace("sub>", "").replace("->", "")
-    orf_list = orf_list.split(">")
-    #create a list of length 2 with the first element being the header and the second being the sequence (still with line breaks (use join later))
-    #combine with loop to create len(orf_list) lists
-    #initialise the new list[gen][header=0 or gen=1]
-    orf_splitlist = [""]*len(orf_list)
+	with open("fsa_sequences/orf_coding.fasta") as orf_fasta:		#open the file, read it and create a list, where each element is a gene with header+sequence
+		orf_list = orf_fasta.read().replace("i>", "").replace("sub>", "").replace("->", "").split(">")
+	
 
-    #Trennen von header und sequenz
-    for i in range(0,len(orf_list)):
-        orf_splitlist[i] = orf_list[i].split("\n", 1)
+    orf_splitlist = [""]*len(orf_list)	#initialise the new list[gen][header=0 or gen=1]
+    orf_list = orf_list[1:] #entfernen des ersten nicht vorhandenden elements
     
-    #zusammenfügen der Sequenz 
-    for i in range(1, len(orf_list)):
-        orf_splitlist[i][1] = "".join(orf_splitlist[i][1].rsplit())
+    for i in range(len(orf_list)):	#Trennen von header und sequenz
+        orf_splitlist[i] = orf_list[i].split("\n", 1)	
+    
+    for i in range(len(orf_list)):	#replace "\n" 
+        orf_splitlist[i][1] = orf_splitlist[i][1].replace("\n", "")
 
-    #entfernen des ersten nicht vorhandenden elements
-    orf_splitlist = orf_splitlist[1:]
+    orf_splitlist_unnested = [x for i in orf_splitlist for x in i]	#unnesten
 
-    #unnesten
-    orf_splitlist_unnested = [x for i in orf_splitlist for x in i]
-
-  
     gene_seq = orf_splitlist_unnested[1::2]
     
 
     #Gen ID
 
     header_list = orf_splitlist_unnested[0::2]
-
     header_split = [""]*len(header_list)
 
-    for i in range(0,len(header_list)):
+    for i in range(len(header_list)):
         header_split[i] = header_list[i].split(" ", 1)
 
     header_split_unnested = [x for i in header_split for x in i]
-    gen_id = header_split_unnested[0::2]
+    gene_id = header_split_unnested[0::2]
 
-    return gene_seq, gen_id, 
+    return gene_seq, gene_id, 
 
 

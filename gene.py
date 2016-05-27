@@ -97,5 +97,10 @@ def creategenes():
 
     return gene
 
+    """
+    Location
+    """
+
+    loc_list = re.findall("([^-][\d]+?)-([\d]+?),", "".join(header_list))
 
 gene = creategenes()

@@ -98,8 +98,6 @@ def createwholegenome(chr_list):
     return whole_genome
 
 
-chr_list = createchromosomes()
-createwholegenome(chr_list)
 
 
 

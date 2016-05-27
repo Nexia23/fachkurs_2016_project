@@ -146,27 +146,34 @@ class Translation(processes.Process):
         return protein
     
 
-    def entkoppeln(self, mrna, i):      #Funktion die Entkoppelt
+    def entkoppeln(self, mrna, i):      
         if i < 10:
             k=0
-            while k <= i:
+            while k <= i:                             #entkoppelt alles von anfang an
                 mrna.sequence_triplet_binding[k] = 0
-                k += 1  # k <= i ist sonst unendlich lange richtig!!
+                k += 1 
 
         elif i >=10:
-            mrna.sequence_triplet_binding[i-10]=0  # das ist nur eien Stelle!
+            k=0
+            while k <=10:                              # Zehnstellen davor werden entkoppelt
+                mrna.sequence_triplet_binding[i-k] = 0
+                k+=1
 
 
     def occupy(self, mrna, i):        #Funktion die Besetzung einrichtet
 
         if i < 10:
             k=0
-            while k <= i:
+            while k <= i:                          # besetzt alle Stellen ab der ersten
                 mrna.sequence_triplet_binding[k] = 1
-                k += 1  # k <= i ist sonst unendlich lange richtig!!
+                k += 1  
 
         elif i >= 10:
-            mrna.sequence_triplet_binding[i-10] = 'R'  # das ist nur eien Stelle!
+            k=0
+            while k <= 9:
+                mrna.sequence_triplet_binding[i-k] = 1     # R gefolgt von 9 Einsen(ribosom)
+                mrna.sequence_triplet_binding[i] = 'R'  
+                k += 1
 
             
 

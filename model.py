@@ -1,6 +1,7 @@
 import modeldata
 import molecules as mol
 import translation
+import replication as rep
 
 
 class Output:
@@ -51,20 +52,42 @@ class Model:
         self.timestep = 0
         self.mrnas = {}  # all selfs should be initialized in the constructor
         self.ribosomes = {} #dictionary will be filled with 10 Ribosomes
+        self.helicases = {}
+        self.polymerases = {}
+        self.chromosomes = {}
         self.volume = 1
         self.db = modeldata.ModelData()
 
         # ribosomes
         self.__initialize_ribosomes()
+        self._init_helicase()
+        self._init_polymerase()
         # mRNAs
         self.__initialize_mRNA()
+        self.__initialize_chromosomes()
 
         self.__initialize_states()
         self.__initialize_processes()
         self.results = Output(self)  #
 
+    def _init_helicase(self):
+        self.helicases = {'DnaB': rep.Helicase("Helicase", "DnaB", 1)}
+        
+    def _init_polymerase(self):
+        self.polymerases = {'Polymerase3' :rep.Polymerase("Polymerase", "Polymerase3", 1)}
+
     def __initialize_ribosomes(self):
         self.ribosomes = {'Ribosomes': mol.Ribosome('Ribos', 'Ribosomes', 10)}
+
+    def __initialize_chromosomes(self):
+        self.chromosomes = {'chrom1': rep.Chromosome("chrom1", ['A','G','C','T','T','G','A','C','T','A','A','G','C','T','T',
+                                                                 'G','A','C','T','A','A','G','C','T','T','G','A','C','T','A',
+                                                                 'A','G','C','T','T','G','A','C','T','A','A','G','C','T','T',
+                                                                 'G','A','C','T','A','A','G','C','T','T','G','A','C','T','A',
+                                                                 'A','G','C','T','T','G','A','C','T','A','A','G','C','T','T',
+                                                                 'G','A','C','T','A','A','G','C','T','T','G','A','C','T','A',
+                                                                 'A','G','C','T','T','G','A','C','T','A','A','G','C','T','T',
+                                                                 'G','A','C','T','A']) }
 
     def __initialize_mRNA(self):
         # I think to have a function for each molecule state generation is more intuitive and less error prone
@@ -79,12 +102,22 @@ class Model:
         """
 
         self.states.update(self.ribosomes)  #adding dictionaries to self.states
+        self.states.update(self.helicases)
+        self.states.update(self.polymerases)
+        self.states.update(self.chromosomes)
         self.states.update(self.mrnas)
 
     def __initialize_processes(self):
         trsl = translation.Translation(1, "Translation")
         trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
         self.processes = {"Translation": trsl}
+
+        repl =rep.Replication(2, "Replication")
+        replication_enzyme_ids= list(self.helicases.keys()).extend(list(self.polymerases.keys()))
+        
+        repl.set_states(list(self.chromosomes.keys()), replication_enzyme_ids)
+        self.processes.update({"Replication":repl})
+
 
     def step(self):
         """
@@ -113,4 +146,4 @@ class Model:
 
 if __name__ == "__main__":
     c = Model()
-    c.simulate(100, log=True)
+    c.simulate(3, log=True)

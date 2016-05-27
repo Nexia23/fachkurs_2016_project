@@ -218,10 +218,9 @@ def creategenes():
     for i in range(len(header_list)):   #creates a list where loc_list[0] = all the tuples of locations for gene 0 in str form
         loc_list[i] = re.findall("([^-][\d]+?)-([\d]+?),", header_list[i])
 
-    """
+    
     gene = {}
     for i in range(len(gene_id)):
         gene[gene_id[i]] = Gene(gene_id[i], which_chr[i], gene_seq[i])
 
     return gene
-    """

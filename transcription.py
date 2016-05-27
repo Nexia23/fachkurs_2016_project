@@ -6,13 +6,17 @@ import random
 ################### TO DO !!!!!! ########################
 #respect gene count in binding probability 
 
-#implement an update function which refers to 1s of cell cycle
-# -> e.g. bigger update function iterating transcribe-steps for the genes
-# -> e.g. look to data: elongation-processes per 1s and transcripion-rates
+#look to data: elongation-processes per 1s and transcripion-rates
 
 #get information how many mRNAs are transcribed at the moment
 
+#include correct gene-class: with gene start, end and strand instead of sequence
 
+#at the moment: only one polymerase transcribes an RNA
+
+#include rRNA and tRNA - transcription
+
+#bigger polymerase, occupying more than only the transcribed position
 
 ########################################################
 
@@ -25,42 +29,77 @@ class Transcription(processes.Process):
 		
 		super().__init__(id, name)
 		#initialized through set_states in model: 
-		#id_enzymes= one single RNA Polymerase
+		#id_enzymes= one single RNA Polymerase -> not necessary as polymerase is an argument of Transcription 
+		# -> multiple transcription processes with different polymerases possible
 		#id_substrates= a dictionary with all genes of the genome: {geneid1: Geneobject, geneid2: GeneObject, ...} 
 		self.mypolymerase=polymerase
-		self.position=None
-		self.gene=0
+
 				#polymerase=RNAPolymeraseII(needs to be specified) -> initialization can be done in transcription or model
 				#expect polymerase to be unbound -> check in model.py
 
 
-	#def update(self, model):		#expect an dictionary genes 
-	def update(self,genedic):
-		
-		#check for polymerase-dna-binding
-		if self.position==None:
-			#allgenes=model.genes
 
-			#trandscribed gene identified
-			#gene_ids=model.genes.keys()
-			gene_ids=list(genedic.keys())
-			rand_index=random.randint(0,len(gene_ids))
+	def __repr__(self):
+		# todo: each process class should have something like this
+		pass
 
-			#transc_gene=model.genes[rand_index]
-			transc_gene=genedic[gene_ids[rand_index]]
-			print(transc_gene.sequence)
+	def __str__(self):
+		# todo: each process class should have something like this
+		pass
 
 
+
+	#def update(self, model):
+	def update(self, genedic, rna_pool):
+		#genedic=model.genes
+		#rna_pool=model.states
+
+		update_per_s=2000
+
+		for steps in range(update_per_s):
+			rna = self.onestep(genedic)
+			if isinstance(rna, molecules.MRNA):
+				rna_pool.append(rna)
+				#if rna.name in model.states:
+    			#	model.states[rna.name].append(rna)
+    			#else:
+    			#	model.states[rna.name] = [rna]
+			return rna_pool
+
+
+			
+	def onestep(self,genedic):			#expect a dictionary of genes 
+
+		transc_gene=self.select_gene(genedic)
+
+		#testprints
+		#print(transc_gene.name)
+		#print(transc_gene.sequence)	
+		#print(transc_gene.pol_on_gene)
+
+		if not transc_gene.pol_on_gene:
 			self.initiate(transc_gene)
 		else:
-			mrna = self.transcribe()
+			pol_position=transc_gene.pol_on_gene[random.randint(0,len(transc_gene.pol_on_gene)-1)]
+			mrna = self.transcribe(transc_gene, pol_position)
 			if isinstance(mrna, molecules.MRNA):
+				#print('this is an mrna')
 				#if mrna.name in model.states:
 				#	model.states[mrna.name].append(mrna)
 				#else:
 				#	model.states[mrna.name] = [mrna]
 				return mrna
 
+
+	def select_gene(self, genedic):
+
+		#trandscribed gene identified
+		#include paramteer gene copies
+		gene_ids=list(genedic.keys())
+		rand_index=random.randint(0,len(gene_ids)-1)	#later: no random selection, but weighted by transcription rates of each gene
+		transc_gene=genedic[gene_ids[rand_index]]
+
+		return transc_gene
 
 
 	def initiate(self,gene):
@@ -69,21 +108,23 @@ class Transcription(processes.Process):
 
 		#### from the data group: we expect an self.genes-dictionary in model.py containing all genes
 
+		#print(gene.sequence_binding)
+
 		if gene.sequence_binding[0]==0 and self.mypolymerase.count>0:
 		
-		#optional: add stochastical condition for binding
-			self.position=0
-			self.gene=gene
-			gene.sequence_binding[0]=molecules.MRNA("mRNA_{}".format(gene.mid), gene.name, '',)		#later: add bigger polymerase -> sequence_binding[0+i]=1
+		#optional: add stochastical condition for binding, combination with gene transcription rates 
+			gene.pol_on_gene.append(0)
+			gene.sequence_binding[0]=molecules.MRNA("mRNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)		
+			#later: add bigger polymerase -> sequence_binding[0+i]=1
 			self.mypolymerase.count+=-1
 
 
-	def transcribe(self):
+	def transcribe(self, gene, position):
 
 		""" elongate mRNA for given ORF for only one step. if ORF ends: call terminate-function """
 
-		pos=self.position
-		gene=self.gene
+		pos=position
+		index=gene.pol_on_gene.index(position)
 		mrna=gene.sequence_binding[pos]
 
 		#appending the correct codon from the coding strand
@@ -96,27 +137,23 @@ class Transcription(processes.Process):
 		if pos+1<len(gene.sequence_binding):
 
 			if gene.sequence_binding[pos+1]==0:
-				self.position+=1
+				gene.pol_on_gene[index]+=1
 				gene.sequence_binding[pos+1]=mrna
 				gene.sequence_binding[pos]=0
 				return 0
 		else:
-			return self.terminate()
+			return self.terminate(gene, position)
 		
 
 
-
-
-	def terminate(self):
+	def terminate(self, gene, position):
 		""" separate mRNA-DNA-Polymerase-complex. release and store new mRNA """
-		
 		
 		self.mypolymerase.count+=1
 
-		mrna = self.gene.sequence_binding[self.position]
-		self.gene.sequence_binding[self.position]=0
-		self.position=None
-		self.gene=0	
+		mrna = gene.sequence_binding[position]
+		gene.sequence_binding[position]=0
+		del gene.pol_on_gene[gene.pol_on_gene.index(position)]
 
 		return mrna
 

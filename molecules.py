@@ -11,7 +11,7 @@ class BioMolecule:
     """
 
     def __init__(self, mid, name, mass=0):
-        self.mid = mid
+        self._mid = mid
         self.name = name
         self.mass = mass
 
@@ -42,7 +42,7 @@ class BioMolecule:
            not isinstance(value, int):
             raise Exception("mass must be numeric")
         else:
-        self.__mass = value
+            self.__mass = value
 
     def __repr__(self):
         return ','.join([self.name, str(type(self))])
@@ -209,3 +209,4 @@ class Gene(BioMoleculeCount):
             raise Exception("sequence must be a string")
             # TODO: check for valid nucleotides here
         self.__sequence = value.upper()
+

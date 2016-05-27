@@ -91,7 +91,7 @@ def createchromosome():
 
     
 chr_list = createchromosome()
-print(chr_list[0].sequence)
+print(chr_list[16].sequence)
 
 
 

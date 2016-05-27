@@ -84,18 +84,23 @@ class Translation(processes.Process):
         """
         move not initiated ribosomes
         """
-        # for i, codon in enumerate(mrna.sequence_triplet_binding):
-            # if codon == 'R':
-
-        # Ribosom läuft auf mRNA ohne protein synthese
-        # # 1. Fall: nächstes codon belegt (mrna.sequence_triplet_binding[0] == 1)
-        # # 2. Fall: nächstes codon frei und kein Start codon -> eins weiter bewegen
-        # # 3. Fall: nächstes codon frei und Start codon -> initiate() und elongate() aufrufen und beenden
-        # # 4. Fall: kein nächstes codon -> abfallen (mrna.sequence_triplet_binding[0] = 0 und self.ribosome.count += 1)
-        # sobald ein Ribosom Protein ist, elongate() aufrufen und beenden
-
-            # elif isinstance(ribosome, molecules.Protein):
-
+        for i, codon in enumerate(mrna.sequence_triplet_binding):
+            if codon == 'R':	# wenn R erreicht wird
+            	mrna.sequence_triplet_binding[i+1]=1
+            	break
+            if mrna.sequence_triplet_binding[i+1]==0:	# ...und die nächste Stelle frei ist
+            	if mrna.sequence[i+1] == 'AUG':		# ...und die nächste Stelle ein Startcodon ist
+            		self.initiate(mrna)	# gehe zu initiate
+            	else:	# wenn die nächste Stelle kein Startcodon ist
+            		mrna.sequence_triplet_binding[i+1]='R'	# bewege R ein Codon weiter
+            		mrna.sequence_triplet_binding[i]=1	# und ersetze die vorherige Stelle R durch 1
+            		#self.occupy(mrna, i)	
+            if i==len(mrna.sequence_triplet_binding)-1:	# wenn das Ende der mRNA erreicht ist
+            	mrna.sequence_triplet_binding[i] = 0	# verlasse die mRNA
+            	#self.entkoppeln(mrna, i)
+        		self.ribosomes.count += 1	# und erhöhr die Menge freier Ribosomen um 1
+        	elif isinstance(ribosome, molecules.Protein):	# falls ein Protein synthetisiert wird
+        		self.elongate(mrna)	# gehe zu elongate
         pass
 
     def initiate(self, mrna):

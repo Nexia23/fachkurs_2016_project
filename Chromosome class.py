@@ -65,7 +65,7 @@ class Chromosome(object):
 # Objekte erstellen
 #objekte immer klein schrieben und vlt auch abkürzen -> Chromosome1 = chr1
 
-def createchromosome():
+def createchromosomes():
     
     chr1=Chromosome(1,"fsa_sequences/S288C_Chromosome I.fsa")
     chr2=Chromosome(2,"fsa_sequences/S288C_Chromosome II.fsa")
@@ -89,9 +89,17 @@ def createchromosome():
     
     return chr_list
 
-    
-chr_list = createchromosome()
-print(chr_list[16].sequence)
+def createwholegenome(chr_list):
+
+    whole_genome = ""
+    for i in range(len(chr_list)):
+        whole_genome += whole_genome + chr_list[i].sequence
+
+    return whole_genome
+
+
+chr_list = createchromosomes()
+createwholegenome(chr_list)
 
 
 

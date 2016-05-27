@@ -32,7 +32,7 @@ class Transcription(processes.Process):
 		#id_enzymes= one single RNA Polymerase -> not necessary as polymerase is an argument of Transcription 
 		# -> multiple transcription processes with different polymerases possible
 		#id_substrates= a dictionary with all genes of the genome: {geneid1: Geneobject, geneid2: GeneObject, ...} 
-		self.mypolymerase=polymerase
+		self.mypolymerase=molecules.RNAPolymeraseII("RNAPolIIpool", "RNAPolII", 200)
 
 				#polymerase=RNAPolymeraseII(needs to be specified) -> initialization can be done in transcription or model
 				#expect polymerase to be unbound -> check in model.py
@@ -71,7 +71,6 @@ class Transcription(processes.Process):
 	def onestep(self,genedic):			#expect a dictionary of genes 
 
 		transc_gene=self.select_gene(genedic)
-
 		#testprints
 		#print(transc_gene.name)
 		#print(transc_gene.sequence)	
@@ -95,10 +94,10 @@ class Transcription(processes.Process):
 
 		#trandscribed gene identified
 		#include paramteer gene copies
-		gene_ids=list(genedic.keys())
-		rand_index=random.randint(0,len(gene_ids)-1)	#later: no random selection, but weighted by transcription rates of each gene
-		transc_gene=genedic[gene_ids[rand_index]]
-
+		rand_index=random.randint(0,len(genedic.keys())-1)	#later: no random selection, but weighted by transcription rates of each gene
+		value_gene=genedic[genedic.keys()[rand_index]]
+		transc_gene = molecules.Gene(genedic.keys()[rand_index], "Gene" + str(rand_index), value_gene[3]) #!verify position of value_gene in the array
+		
 		return transc_gene
 
 

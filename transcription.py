@@ -6,19 +6,13 @@ from matplotlib import pyplot as plt
 
 
 ################### TO DO !!!!!! ########################
-#respect gene count in binding probability  ! (Lea)
-
 #look to data: elongation-processes per 1s and transcripion-rates (Huyen)
 
 #get information how many mRNAs are transcribed at the moment
 
-#include correct gene-class: with gene start, end and strand instead of sequence ! (Paula)
-
 #at the moment: only one polymerase transcribes an RNA ! (Paula)
 
 #include rRNA and tRNA - transcription
-
-#bigger polymerase, occupying more than only the transcribed position ! (Lea)
 
 #######################################################
 
@@ -43,8 +37,11 @@ class Transcription(processes.Process):
 				#polymerase=RNAPolymeraseII(needs to be specified) -> initialization can be done in transcription or model
 				#expect polymerase to be unbound -> check in model.py
 
+		#length of occupied sequence by RNA-Polymerase II on DNA
+		self.polymerase_size=10
+
 		#####for visualization of selected genes
-		#self.allgenes=[[],[]]
+		self.allgenes=[[],[]]
 		#########################################
 
 
@@ -63,7 +60,8 @@ class Transcription(processes.Process):
 		#genedic=model.genes
 		#rna_pool=model.states
 
-		update_per_s=5000
+		update_per_s=100
+
 
 		for steps in range(update_per_s):
 			rna = self.onestep(genedic)
@@ -75,9 +73,9 @@ class Transcription(processes.Process):
     			#	model.states[rna.name] = [rna]
 
     	####visualization of selected genes ######
-		#plt.plot(range(len(self.allgenes[0])),self.allgenes[1])
-		#plt.xlabel(self.allgenes[0])
-		#plt.savefig('tests/count_histogram_genes.pdf')
+		plt.plot(range(len(self.allgenes[0])),self.allgenes[1])
+		plt.xlabel(self.allgenes[0])
+		plt.savefig('tests/count_histogram_genes.pdf')
 		###########################################
 
 		return rna_pool
@@ -94,11 +92,11 @@ class Transcription(processes.Process):
 		#print(transc_gene.pol_on_gene)
 
 		######for visualization of selected genes ################
-		#if transc_gene.name in self.allgenes[0]:
-		#	self.allgenes[1][self.allgenes[0].index(transc_gene.name)]+=1
-		#else:
-		#	self.allgenes[0].append(transc_gene.name)
-		#	self.allgenes[1].append(1)
+		if transc_gene.name in self.allgenes[0]:
+			self.allgenes[1][self.allgenes[0].index(transc_gene.name)]+=1
+		else:
+			self.allgenes[0].append(transc_gene.name)
+			self.allgenes[1].append(1)
 		#########################################################
 
 		if not transc_gene.pol_on_gene:
@@ -109,7 +107,6 @@ class Transcription(processes.Process):
 			pol_position=random.choice(transc_gene.pol_on_gene)
 			mrna = self.transcribe(transc_gene, pol_position)
 			if isinstance(mrna, molecules.MRNA):
-				#print('this is an mrna')
 				#if mrna.name in model.states:
 				#	model.states[mrna.name].append(mrna)
 				#else:
@@ -119,8 +116,7 @@ class Transcription(processes.Process):
 
 	def select_gene(self, genedic):
 
-		#trandscribed gene identified
-		#include parameter gene copies
+		#trandscribed gene identified: no random selection, but weighted by copies of each gene
 		copies=[]
 		for g in genedic.keys():
 			copies.append(genedic[g].count)
@@ -129,7 +125,7 @@ class Transcription(processes.Process):
 
 		rand_index=np.random.choice(range(len(copies)),p=copie_probs)
 
-		gene_ids=list(genedic.keys())	#no random selection, but weighted by copies of each gene
+		gene_ids=list(genedic.keys())	
 		transc_gene=genedic[gene_ids[rand_index]]
 
 		return transc_gene
@@ -147,17 +143,25 @@ class Transcription(processes.Process):
 		
 		#optional: add stochastical condition for binding, combination with gene transcription rates 
 			gene.pol_on_gene.append(0)
-			gene.sequence_binding[0]=molecules.MRNA("mRNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)		
-			#later: add bigger polymerase -> sequence_binding[0+i]=1
+			mrna=molecules.MRNA("mRNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
+
+			#bigger polymerase: has size of polymerase_size in both directions
+			if self.polymerase_size>len(gene.sequence_binding):
+				for i in range(len(gene.sequence_binding)):
+					gene.sequence_binding[i]=mrna
+			else:
+				for i in range(self.polymerase_size):
+					gene.sequence_binding[i]=mrna		
+			
 			self.mypolymerase.count+=-1
 
 
 	def transcribe(self, gene, position):
 
 		""" elongate mRNA for given ORF for only one step. if ORF ends: call terminate-function """
-
 		pos=position
 		index=gene.pol_on_gene.index(position)
+
 		mrna=gene.sequence_binding[pos]
 
 		#appending the correct codon from the coding strand
@@ -167,13 +171,25 @@ class Transcription(processes.Process):
 		else:
 			mrna.sequence+=nuc
 
+		#if we are not on the end of the ORF-string
 		if pos+1<len(gene.sequence_binding):
 
-			if gene.sequence_binding[pos+1]==0:
+			#if coding region is ending: no macromolecule is thought to disturb the elongation process
+			if pos+self.polymerase_size>=len(gene.sequence_binding):
 				gene.pol_on_gene[index]+=1
-				gene.sequence_binding[pos+1]=mrna
-				gene.sequence_binding[pos]=0
+				if pos >= self.polymerase_size:
+					gene.sequence_binding[pos-self.polymerase_size]=0
 				return 0
+
+			#if position space in front of polymerase is empty
+			elif gene.sequence_binding[pos+self.polymerase_size]==0:
+				print('here')
+				gene.pol_on_gene[index]+=1
+				gene.sequence_binding[pos+self.polymerase_size]=mrna
+				if pos >= self.polymerase_size:
+					gene.sequence_binding[pos-self.polymerase_size]=0
+				return 0
+
 		else:
 			return self.terminate(gene, position)
 		

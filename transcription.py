@@ -1,22 +1,28 @@
 import processes 
 import molecules
 import random
+import numpy as np
+from matplotlib import pyplot as plt
 
 
 ################### TO DO !!!!!! ########################
-#respect gene count in binding probability 
+#respect gene count in binding probability  ! (Lea)
 
-#look to data: elongation-processes per 1s and transcripion-rates
+#look to data: elongation-processes per 1s and transcripion-rates (Huyen)
 
 #get information how many mRNAs are transcribed at the moment
 
-#include correct gene-class: with gene start, end and strand instead of sequence
+#include correct gene-class: with gene start, end and strand instead of sequence ! (Paula)
 
-#at the moment: only one polymerase transcribes an RNA
+#at the moment: only one polymerase transcribes an RNA ! (Paula)
 
 #include rRNA and tRNA - transcription
 
-#bigger polymerase, occupying more than only the transcribed position
+#bigger polymerase, occupying more than only the transcribed position ! (Lea)
+
+#######################################################
+
+#mRNA half lifes
 
 ########################################################
 
@@ -37,6 +43,9 @@ class Transcription(processes.Process):
 				#polymerase=RNAPolymeraseII(needs to be specified) -> initialization can be done in transcription or model
 				#expect polymerase to be unbound -> check in model.py
 
+		#####for visualization of selected genes
+		#self.allgenes=[[],[]]
+		#########################################
 
 
 	def __repr__(self):
@@ -54,7 +63,7 @@ class Transcription(processes.Process):
 		#genedic=model.genes
 		#rna_pool=model.states
 
-		update_per_s=2000
+		update_per_s=5000
 
 		for steps in range(update_per_s):
 			rna = self.onestep(genedic)
@@ -64,7 +73,14 @@ class Transcription(processes.Process):
     			#	model.states[rna.name].append(rna)
     			#else:
     			#	model.states[rna.name] = [rna]
-			return rna_pool
+
+    	####visualization of selected genes ######
+		#plt.plot(range(len(self.allgenes[0])),self.allgenes[1])
+		#plt.xlabel(self.allgenes[0])
+		#plt.savefig('tests/count_histogram_genes.pdf')
+		###########################################
+
+		return rna_pool
 
 
 			
@@ -77,10 +93,20 @@ class Transcription(processes.Process):
 		#print(transc_gene.sequence)	
 		#print(transc_gene.pol_on_gene)
 
+		######for visualization of selected genes ################
+		#if transc_gene.name in self.allgenes[0]:
+		#	self.allgenes[1][self.allgenes[0].index(transc_gene.name)]+=1
+		#else:
+		#	self.allgenes[0].append(transc_gene.name)
+		#	self.allgenes[1].append(1)
+		#########################################################
+
 		if not transc_gene.pol_on_gene:
 			self.initiate(transc_gene)
 		else:
-			pol_position=transc_gene.pol_on_gene[random.randint(0,len(transc_gene.pol_on_gene)-1)]
+			#if gene very long - likely to have a second pol binding there
+				#self.initiate(transc_gene)
+			pol_position=random.choice(transc_gene.pol_on_gene)
 			mrna = self.transcribe(transc_gene, pol_position)
 			if isinstance(mrna, molecules.MRNA):
 				#print('this is an mrna')
@@ -94,9 +120,16 @@ class Transcription(processes.Process):
 	def select_gene(self, genedic):
 
 		#trandscribed gene identified
-		#include paramteer gene copies
-		gene_ids=list(genedic.keys())
-		rand_index=random.randint(0,len(gene_ids)-1)	#later: no random selection, but weighted by transcription rates of each gene
+		#include parameter gene copies
+		copies=[]
+		for g in genedic.keys():
+			copies.append(genedic[g].count)
+		copies=np.array(copies)
+		copie_probs=copies/sum(copies)
+
+		rand_index=np.random.choice(range(len(copies)),p=copie_probs)
+
+		gene_ids=list(genedic.keys())	#no random selection, but weighted by copies of each gene
 		transc_gene=genedic[gene_ids[rand_index]]
 
 		return transc_gene

@@ -1,6 +1,8 @@
 import processes
 import molecules
 import numpy
+#import random
+#import copy
 
 
 class Translation(processes.Process):
@@ -60,7 +62,7 @@ class Translation(processes.Process):
             if mrna.sequence_triplet_binding[0] == 0:
                 self.bind(mrna)  # bind to first position on mRNA
                 self.move(mrna)  # move ribosome that has not yet initiated translation
-                prot = self.elongate(mrna)  # TODO:FIXME aufruf self.move() anstatt elongate
+                prot = self.move(mrna)  # TODO:FIXME aufruf self.move() anstatt elongate
                 
             # put proteins in lists (state)
             if isinstance(prot, molecules.Protein):     # storing the protein in the states-dictionary
@@ -82,26 +84,33 @@ class Translation(processes.Process):
 
     def move(self, mrna):
         """
-        move not initiated ribosomes
+        move not initiated ribosomes and also other ribosomes
+        
+
         """
-        for i, codon in enumerate(mrna.sequence_triplet_binding):
+        for i, codon in enumerate(mrna.sequence_triplet_binding):      
+                                                                       
             if codon == 'R':	# wenn R erreicht wird
             	mrna.sequence_triplet_binding[i+1]=1
             	break
+            
             if mrna.sequence_triplet_binding[i+1]==0:	# ...und die nächste Stelle frei ist
             	if mrna.sequence[i+1] == 'AUG':		# ...und die nächste Stelle ein Startcodon ist
             		self.initiate(mrna)	# gehe zu initiate
-            	else:	# wenn die nächste Stelle kein Startcodon ist
-            		mrna.sequence_triplet_binding[i+1]='R'	# bewege R ein Codon weiter
-            		mrna.sequence_triplet_binding[i]=1	# und ersetze die vorherige Stelle R durch 1
-            		#self.occupy(mrna, i)	
+            	
+                else:	# wenn die nächste Stelle kein Startcodon ist
+            		#mrna.sequence_triplet_binding[i+1]='R'	# bewege R ein Codon weiter
+            		#mrna.sequence_triplet_binding[i]=1	# und ersetze die vorherige Stelle R durch 1
+            		self.occupy(mrna, i+1)	
+           
             if i==len(mrna.sequence_triplet_binding)-1:	# wenn das Ende der mRNA erreicht ist
-            	mrna.sequence_triplet_binding[i] = 0	# verlasse die mRNA
-            	#self.entkoppeln(mrna, i)
+            	#mrna.sequence_triplet_binding[i] = 0	# verlasse die mRNA
+            	self.entkoppeln(mrna, i)
         		self.ribosomes.count += 1	# und erhöhr die Menge freier Ribosomen um 1
-        	elif isinstance(ribosome, molecules.Protein):	# falls ein Protein synthetisiert wird
-        		self.elongate(mrna)	# gehe zu elongate
-        pass
+        	
+            elif isinstance(ribosome, molecules.Protein):	# falls ein Protein synthetisiert wird
+        		return self.elongate(mrna)	# gehe zu elongate
+    
 
     def initiate(self, mrna):
         """
@@ -123,6 +132,10 @@ class Translation(processes.Process):
 
         @type return: Protein or False
         """
+        #rd_pool = copy.deepcopy(mrna.sequence_triplet_binding) #kopiere Liste aus der wir unser ribosome waehlen
+        #rd_ribo = random.choice(rd_pool) #waehle Stelle die elongiert werden soll
+        #rd_pool = rd_pool  #hier soll das element aus der waehlmenge raus genommen werden um nicht doppelt zu waehlen
+
         for i, ribosome in enumerate(mrna.sequence_triplet_binding):
             if isinstance(ribosome, molecules.Protein):
 
@@ -137,8 +150,8 @@ class Translation(processes.Process):
 
                 if not mrna.sequence_triplet_binding[i + 1]:  # if the next rna position is free
                     mrna.sequence_triplet_binding[i] += aa
-                    mrna.sequence_triplet_binding[i + 1] = mrna.sequence_triplet_binding[i]
-                    mrna.sequence_triplet_binding[i] = 0
+                    self.occupy(mrna, i+1)                      # nächste Stelle besetzten durch ocupyfunction
+
         return 0
     
     def terminate(self, mrna, i):
@@ -146,7 +159,7 @@ class Translation(processes.Process):
         Splits the ribosome/MRNA complex and returns a protein.
         """
         protein = mrna.sequence_triplet_binding[i]  # bound mRNA
-        mrna.sequence_triplet_binding[i] = 0
+        self.entkoppeln(mrna,i)
         self.ribosomes.count += 1
         return protein
     
@@ -159,6 +172,7 @@ class Translation(processes.Process):
                 k += 1 
 
         elif i >=10:
+
             k=0
             while k <=10:                              # Zehnstellen davor werden entkoppelt
                 mrna.sequence_triplet_binding[i-k] = 0
@@ -174,10 +188,11 @@ class Translation(processes.Process):
                 k += 1  
 
         elif i >= 10:
+            mrna.sequence_triplet_binding[i-10] = 0        # Stelle die frei wird
             k=0
+            mrna.sequence_triplet_binding[i] = 'R' 
             while k <= 9:
-                mrna.sequence_triplet_binding[i-k] = 1     # R gefolgt von 9 Einsen(ribosom)
-                mrna.sequence_triplet_binding[i] = 'R'  
+                mrna.sequence_triplet_binding[i-k] = 1     # R gefolgt von 9 Einsen(ribosom) 
                 k += 1
 
             

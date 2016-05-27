@@ -181,6 +181,7 @@ class Gene(BioMoleculeCount):
     	super().__init__(mid, name, count)
     	self.__sequence=sequence
     	self.sequence_binding=[0]*len(sequence)
+    	self.pol_on_gene=[]
 
 
 	###### COMMENT for DATA GROUP #######

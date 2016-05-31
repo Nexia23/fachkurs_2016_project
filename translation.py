@@ -1,6 +1,6 @@
 import processes
 import molecules
-import numpy
+import numpy as np
 #import random
 #import copy
 
@@ -48,33 +48,37 @@ class Translation(processes.Process):
     def __initiate_ribosomes(self):
         self.ribosomes = molecules.Ribosome('Ribosomes', 'Ribosome', 1)
 
+
     def update(self, model):
         """
         Update all mrnas and translate proteins.
         """
         # enzymes_id -> the only one initialized ribosome
         self.ribosomes = model.states[list(self.enzyme_ids)[0]] # call in the dictionary states for the Ribsosome-object
-        for mrna_id in self.substrate_ids:          # substrate should be a list for ids of all mrnas
-            prot = None                             # initialise prot variable
-            mrna = model.states[mrna_id]            # object of mRNA
 
-            # ribosoms work: bind, move, initialise, elongate
-            if mrna.sequence_triplet_binding[0] == 0:  # check if 1st codon is empty
-                self.bind(mrna)  # bind to first position on mRNA
-            prot = self.move(mrna)  # move ribosome that has not yet initiated translation
-                
-            # put proteins in lists (state)
-            if isinstance(prot, molecules.Protein):     # storing the protein in the states-dictionary
-                if prot.name in model.states:
-                    model.states[prot.name].append(prot)
-                else:
-                    model.states[prot.name] = [prot]
+        for i in range (10):
+
+            for mrna_id in np.random.shuffle(self.substrate_ids):           # substrate should be a list for ids of all mrnas
+                prot = None                                                 # initialise prot variable
+                mrna = model.states[mrna_id]                                # object of mRNA
+
+                # ribosoms work: bind, move, initialise, elongate
+                if mrna.sequence_triplet_binding[0] == 0:  # check if 1st codon is empty
+                    self.bind(mrna)  # bind to first position on mRNA
+                self.move(mrna)  # move ribosome that has not yet initiated translation
+                    
+                # put proteins in lists (state)
+                if isinstance(prot, molecules.Protein):     # storing the protein in the states-dictionary
+                    if prot.name in model.states:
+                        model.states[prot.name].append(prot)
+                    else:
+                        model.states[prot.name] = [prot]
 
     def bind(self, mrna):
         """
         Bind to 5'-end of mRNA --> initiate / move without protein synthesis
         """
-        if numpy.random.poisson(self.ribosomes.count) > 1:  # check if ribosome can bind
+        if np.random.poisson(self.ribosomes.count) > 1:  # check if ribosome can bind
             mrna.sequence_triplet_binding[0] = 'R'          # !Jens! codon wird 'R', Teil des Ribosomes binden an 0. Stelle binden!
             if mrna.sequence[0:3]=='AUG':                   # if first codon is START codon -> initiate
                 self.initiate(mrna)
@@ -87,23 +91,27 @@ class Translation(processes.Process):
         
 
         """
-        for i, codon in enumerate(mrna.sequence_triplet_binding):  # iterate through all codons (1 - occupied, 'R' - not initiated ribosome, 0 - free)  
-            if i==len(mrna.sequence_triplet_binding)-1: # wenn das Ende der mRNA erreicht ist (letztes codon)
-                self.entkoppeln(mrna, i)
-                self.ribosomes.count += 1   # und erhöhr die Menge freier Ribosomen um 1                                                           
+        ribo_pos = [j for j, val in enumerate(mrna.sequence_triplet_binding) if val=='R'] #liste die R-positionen speichert also den index in triplet_binding 
+        
+        for i in np.random.shuffle(ribo_pos):  # iterate through all codons randomly (1 - occupied, 'R' - not initiated ribosome, 0 - free)  
+           
+            if ribo_pos[i] == len(mrna.sequence_triplet_binding)-1: # wenn das Ende der mRNA erreicht ist (letztes codon)
+                self.entkoppeln(mrna, ribo_pos[i])
+                self.ribosomes.count += 1   # und erhöht die Menge freier Ribosomen um 1                                                           
             
-            if codon == 'R':    # wenn R erreicht wird
-                if mrna.sequence_triplet_binding[i+1]== 1:
-                    break 
             
-                elif mrna.sequence_triplet_binding[i+1]== 0:   # ...und die nächste Stelle frei ist
-                    if mrna.sequence[i+1] == 'AUG':     # ...und die nächste Stelle ein Startcodon ist
-                        self.initiate(mrna,i+1) # gehe zu initiate !Jens!: Siehe Issue #10
-                        return self.elongate(mrna)  # danach kann keines mehr nur bewegt werden                    
-                    else:   # wenn die nächste Stelle kein Startcodon ist
-                        self.occupy(mrna, i+1)  
+            if mrna.sequence_triplet_binding[ribo_pos[i]+1] == 1:  # besetzt also muss es warten
+                break 
+            
+            elif mrna.sequence_triplet_binding[ribo_pos[i]+1]== 0:   # ...und die nächste Stelle frei ist
+                if mrna.sequence[ribo_pos[i]+1] == 'AUG':     # ...und die nächste Stelle ein Startcodon ist
+                    self.initiate(mrna, ribo_pos[i]+1) # gehe zu initiate !Jens!: Siehe Issue #10
+                    self.elongate(mrna)  # danach kann keines mehr nur bewegt werden                    
+                else:   # wenn die nächste Stelle kein Startcodon ist
+                    self.occupy(mrna, ribo_pos[i]+1)  
+
             elif isinstance(ribosome, molecules.Protein):   # falls ein Protein synthetisiert wird
-                return self.elongate(mrna)  # gehe zu elongate
+                self.elongate(mrna)  # gehe zu elongate
     
 
     def initiate(self, mrna, i):

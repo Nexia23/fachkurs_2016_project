@@ -32,7 +32,7 @@ class Transcription(processes.Process):
 		#id_enzymes= one single RNA Polymerase -> not necessary as polymerase is an argument of Transcription 
 		# -> multiple transcription processes with different polymerases possible
 		#id_substrates= a dictionary with all genes of the genome: {geneid1: Geneobject, geneid2: GeneObject, ...} 
-		self.mypolymerase=molecules.RNAPolymeraseII("RNAPolIIpool", "RNAPolII", 200)
+		self.mypolymerase=molecules.RNAPolymeraseII("RNAPolIIpool", "RNAPolII", 200) 
 
 				#polymerase=RNAPolymeraseII(needs to be specified) -> initialization can be done in transcription or model
 				#expect polymerase to be unbound -> check in model.py
@@ -120,12 +120,17 @@ class Transcription(processes.Process):
 		#transcribed gene identified: no random selection, but weighted by copies of each gene
 
 		copies=[]
+		transc_rate=[]
 		for g in genedic.keys():
 			copies.append(genedic[g].count)
+			transc_rate.append(genedic[g].rate)
 		copies=np.array(copies)
+		transc_rate=np.array(transc_rate)
 		copie_probs=copies/sum(copies)
+		rate_probs=transc_rate/sum(transc_rate)
+		weights=copie_probs*rate_probs
 
-		rand_index=np.random.choice(range(len(copies)),p=copie_probs)
+		rand_index=np.random.choice(range(len(weights)),p=weights)
 
 		gene_ids=list(genedic.keys())	
 		transc_gene=genedic[gene_ids[rand_index]]
@@ -140,6 +145,7 @@ class Transcription(processes.Process):
 		#### from the data group: we expect an self.genes-dictionary in model.py containing all genes
 
 		#print(gene.sequence_binding)
+		#here or check if gene codes for mRNA, RNA or tRNA
 
 		if gene.sequence_binding[0]==0 and self.mypolymerase.count>0:
 		
@@ -147,6 +153,15 @@ class Transcription(processes.Process):
 			if isinstance(self.mypolymerase, molecules.RNAPolymeraseII): 
 				gene.pol_on_gene.append(0)
 				mrna=molecules.MRNA("mRNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
+
+			#if isinstance(self.mypolymerase, molecules.RNAPolymeraseI):
+				#gene.pol_on_gene[0].append(0)
+				#rna=molecules.RNA("RNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
+
+			#if isinstance(self.mypolymerase, molecules.RNAPolymeraseIII):
+				#gene.pol_on_gene[0].append(0)
+				#rna=molecules.RNA("RNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
+
 
 			#bigger polymerase: has size of polymerase_size in both directions
 			if self.polymerase_size>len(gene.sequence_binding):
@@ -171,8 +186,10 @@ class Transcription(processes.Process):
 		nuc=gene.sequence[pos]
 		if nuc=='T':
 			mrna.sequence+='U'
+			molecules.NucleotidPool.count_nuc[nuc]+=-1
 		else:
 			mrna.sequence+=nuc
+			molecules.NucleotidPool.count_nuc[nuc]+=-1
 
 		#if we are not on the end of the ORF-string
 		if pos+1<len(gene.sequence_binding):

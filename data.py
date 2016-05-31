@@ -1,13 +1,12 @@
-import itertools
 import re
 import sys
-import random
-import pandas as pd
-import numpy as np
 
-class Chromosome(object):
+
+
+class Chromosome:
     """
-    an object for the chromosome with the attributes:
+    An object for the chromosome with the attributes:
+
     id -> gives out the chromosome in integer form 1-16, 17 = mitochondrial chromosome
     fastaname -> is only important for the initiation of the object and used by the function createchromosomes
     sequence -> sequence of the whole chromosome
@@ -21,6 +20,7 @@ class Chromosome(object):
     def __init__(self, id ,fastaname):
         self._id=id
         self._fastaname=fastaname
+
         
         #read in the file, delete the headers, concatenate the single lines of the sequence and store them as a single string in sequence
         with open(self._fastaname) as chr_fasta:
@@ -30,6 +30,8 @@ class Chromosome(object):
 
         #generate the reverse sequence
         self._revsequence = self._sequence[::-1]
+
+
 
     #add befehl   
     def __add__(self,chromosome):
@@ -74,27 +76,32 @@ class Chromosome(object):
         return self._fastaname
 
 
-
-class Gene(object):
+class Gene:
     """
     an object for the gene sequence with the attributes:
-    id -> gene name
+    id -> gene id
+    name -> gene name
     chr -> which chromosome the gene is on in integer form, 1-15 und 17 = mitochondrial chromosome and 18 = 2-micron plasmid
     sequence -> sequence of the dna which is transcribed
     count ->
     sequence_binding -> records if the gene is bound (=1) or currently not bound (=0), important for transcription vs replikation (i think)
 
     possible operations are:
-    gene.mid -> gives the gene name
-    gene.chr -> gives the chromosome on which the gene is on
-    gene.sequence -> gives the sequence of the gene
+    gene.mid -> provides the gene name
+    gene.chr -> provides the chromosome on which the gene is on
+    gene.sequence -> provides the sequence of the gene
+    gene.name -> provides the name of the gene
     """
-    def __init__(self, mid, chr, sequence, count=0):
-        #self.__location = location
+    def __init__(self, mid, name, chr, sequence, location, count=0):
+        
+        self.__name = name
         self.__mid = mid
+        self.__location = location
         self.__chr  = chr
         self.__sequence = sequence 
         self.sequence_binding=[0]*len(sequence)
+        self.rnas_transcribed=0 
+        self.pol_on_gen = []
 
 
     ###### COMMENT for DATA GROUP #######
@@ -119,6 +126,15 @@ class Gene(object):
     def sequence(self):
         return self.__sequence
         
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def location(self):
+        return self.__location
+    
+    
     @sequence.setter
     def sequence(self, value):
         if not isinstance(value, str):
@@ -127,6 +143,14 @@ class Gene(object):
         self.__sequence = value.upper()
 
 
+
+def createwholegenome(chr_list):
+
+    whole_genome = ""
+    for i in range(len(chr_list)):
+        whole_genome += chr_list[i].sequence
+
+    return whole_genome
 
 def createchromosomes():
     
@@ -149,16 +173,8 @@ def createchromosomes():
     chrmito=Chromosome(17,"fsa_sequences/S288C_Chromosome Mito.fsa")
 
     chr_list=[chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chrmito]
-    
+        
     return chr_list
-
-def createwholegenome(chr_list):
-
-    whole_genome = ""
-    for i in range(len(chr_list)):
-        whole_genome += whole_genome + chr_list[i].sequence
-
-    return whole_genome
 
 def creategenes():
 
@@ -210,6 +226,21 @@ def creategenes():
 
 
     """
+    Name
+    """
+
+    gene_name_list = [""]*len(header_list)
+
+    for i in range(len(header_split)):
+        gene_name_list[i] = header_split[i][1].split(" ", 1)
+
+    gene_name = [x[0] for x in gene_name_list]
+
+
+
+
+
+    """
     Location
     """
 
@@ -221,6 +252,6 @@ def creategenes():
     
     gene = {}
     for i in range(len(gene_id)):
-        gene[gene_id[i]] = Gene(gene_id[i], which_chr[i], gene_seq[i])
+        gene[gene_id[i]] = Gene(gene_id[i], gene_name[i], which_chr[i], gene_seq[i], loc_list[i])
 
     return gene

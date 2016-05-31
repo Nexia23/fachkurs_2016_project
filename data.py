@@ -1,7 +1,7 @@
 import re
 import sys
-
-
+import pandas as pd
+import numpy 
 
 class Chromosome:
     """
@@ -103,16 +103,24 @@ class Gene:
     gene.sequence -> provides the sequence of the gene
     gene.name -> provides the name of the gene
     """
-    def __init__(self, mid, name, chr, sequence, location, count=0):
+    def __init__(self, mid, name, chr, sequence, location, transrate, halflive, count=0):
         
         self.__name = name
         self.__mid = mid
         self.__location = location
         self.__chr  = chr
-        self.__sequence = sequence 
+        self.__sequence = sequence
+        self.__transrate = transrate
+        self.__halflive = halflive
         self.sequence_binding=[0]*len(sequence)
         self.rnas_transcribed=0 
         self.pol_on_gen = []
+
+
+        if numpy.isnan(self.__transrate):
+            self.__transrate = 0.00123056
+        if numpy.isnan(self.__halflive):
+            self.__halflive = 0.262
 
 
     ###### COMMENT for DATA GROUP #######
@@ -144,6 +152,14 @@ class Gene:
     @property
     def location(self):
         return self.__location
+
+    @property
+    def transrate(self):
+        return self.__transrate
+    
+    @property
+    def halflive(self):
+        return self.__halflive
     
     
     @sequence.setter
@@ -259,8 +275,32 @@ def creategenes():
         loc_list[i] = re.findall("([^-][\d]+?)-([\d]+?),", header_list[i])
 
     
+    """
+    transrate
+    """
+    transcription_raw = pd.read_excel("fsa_sequences/msb2010112-s1.xls")
+    
+    
+    transcription_raw[transcription_raw.ix[:,1]<0]=0    #negative werte auf 0 setzen
+    transcription_raw.ix[:,1]=transcription_raw.ix[:,1].divide(9000)    #in sekunden umrechnen
+
+    transcription = transcription_raw.ix[gene_id, 1]
+
+    """
+    halflive
+    """
+    halflive_raw = pd.read_excel("fsa_sequences/msb2010112-s2.xls")
+
+    halflive_raw.ix[:,1] = halflive_raw.ix[:,1].divide(60)
+
+    halflive = halflive_raw.ix[gene_id, 1]
+
+    """
+    return
+    """
     gene = {}
     for i in range(len(gene_id)):
-        gene[gene_id[i]] = Gene(gene_id[i], gene_name[i], which_chr[i], gene_seq[i], loc_list[i])
+        gene[gene_id[i]] = Gene(gene_id[i], gene_name[i], which_chr[i], gene_seq[i], loc_list[i], transcription[i], halflive[i])
 
     return gene
+

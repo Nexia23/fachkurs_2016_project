@@ -15,7 +15,7 @@ def rand_genedic(dic):
 		for i in range(id):
 			n=random.randint(0,3)
 			seq+=nuc[n]
-		dic.update({id: mol.Gene(id, name, seq, 1)})
+		dic.update({id: mol.Gene(id, name, 'chr1', seq, random.randint(1,2))})
 	return dic
 
 dic= rand_genedic(dic)
@@ -27,18 +27,18 @@ mypol=mol.RNAPolymeraseII(2830, 'bigpol', 42)
 trnsc=trsc.Transcription(894, 'perfect_transc', mypol)
 rna_pool=[]
 
-for s in range(1000):
+for s in range(1):
 	#print(mygene.sequence[s])
 	rna_pool= trnsc.update(dic, rna_pool)
 
 print(len(rna_pool))
 
-for r in rna_pool:
-	print(r.name+": "+r.sequence)
+#for r in rna_pool:
+#	print(r.name+": "+r.sequence)
 
 #print('\n')
-#for g in dic.keys():
-#	print(dic[g].name+" :"+dic[g].sequence)
+for g in dic.keys():
+	print(dic[g].name+" :"+str(dic[g].count))
 #print(mygene.sequence_binding)
 
 

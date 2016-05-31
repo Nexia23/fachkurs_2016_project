@@ -32,16 +32,16 @@ class Transcription(processes.Process):
 		#id_enzymes= one single RNA Polymerase -> not necessary as polymerase is an argument of Transcription 
 		# -> multiple transcription processes with different polymerases possible
 		#id_substrates= a dictionary with all genes of the genome: {geneid1: Geneobject, geneid2: GeneObject, ...} 
-		self.mypolymerase=molecules.RNAPolymeraseII("RNAPolIIpool", "RNAPolII", 200)
+		self.mypolymerase=molecules.RNAPolymeraseII("RNAPolIIpool", "RNAPolII", 200) 
 
 				#polymerase=RNAPolymeraseII(needs to be specified) -> initialization can be done in transcription or model
 				#expect polymerase to be unbound -> check in model.py
 
-		#length of occupied sequence by RNA-Polymerase II on DNA
-		self.polymerase_size=10
+		#length of occupied sequence by RNA-Polymerase II on DNA: already validated with data!
+		self.polymerase_size=17
 
 		#####for visualization of selected genes
-		self.allgenes=[[],[]]
+		#self.allgenes=[[],[]]
 		#########################################
 
 
@@ -60,7 +60,8 @@ class Transcription(processes.Process):
 		#genedic=model.genes
 		#rna_pool=model.states
 
-		update_per_s=100
+		#number still needed: empirically! 
+		update_per_s=1000
 
 
 		for steps in range(update_per_s):
@@ -73,9 +74,9 @@ class Transcription(processes.Process):
     			#	model.states[rna.name] = [rna]
 
     	####visualization of selected genes ######
-		plt.plot(range(len(self.allgenes[0])),self.allgenes[1])
-		plt.xlabel(self.allgenes[0])
-		plt.savefig('tests/count_histogram_genes.pdf')
+		#plt.plot(range(len(self.allgenes[0])),self.allgenes[1])
+		#plt.xlabel(self.allgenes[0])
+		#plt.savefig('tests/count_histogram_genes.pdf')
 		###########################################
 
 		return rna_pool
@@ -91,11 +92,11 @@ class Transcription(processes.Process):
 		#print(transc_gene.pol_on_gene)
 
 		######for visualization of selected genes ################
-		if transc_gene.name in self.allgenes[0]:
-			self.allgenes[1][self.allgenes[0].index(transc_gene.name)]+=1
-		else:
-			self.allgenes[0].append(transc_gene.name)
-			self.allgenes[1].append(1)
+		#if transc_gene.name in self.allgenes[0]:
+		#	self.allgenes[1][self.allgenes[0].index(transc_gene.name)]+=1
+		#else:
+		#	self.allgenes[0].append(transc_gene.name)
+		#	self.allgenes[1].append(1)
 		#########################################################
 
 		if not transc_gene.pol_on_gene and transc_gene.sequence_binding[0]==0 and self.mypolymerase.count>0:
@@ -117,15 +118,20 @@ class Transcription(processes.Process):
 
 	def select_gene(self, genedic):
 
-		#trandscribed gene identified: no random selection, but weighted by copies of each gene
+		#transcribed gene identified: no random selection, but weighted by copies of each gene
 
 		copies=[]
+		transc_rate=[]
 		for g in genedic.keys():
 			copies.append(genedic[g].count)
+			transc_rate.append(genedic[g].rate)
 		copies=np.array(copies)
+		transc_rate=np.array(transc_rate)
 		copie_probs=copies/sum(copies)
+		rate_probs=transc_rate/sum(transc_rate)
+		weights=copie_probs*rate_probs
 
-		rand_index=np.random.choice(range(len(copies)),p=copie_probs)
+		rand_index=np.random.choice(range(len(weights)),p=weights)
 
 		gene_ids=list(genedic.keys())	
 		transc_gene=genedic[gene_ids[rand_index]]
@@ -140,11 +146,19 @@ class Transcription(processes.Process):
 		#### from the data group: we expect an self.genes-dictionary in model.py containing all genes
 
 		#print(gene.sequence_binding)
-		
-		#optional: add stochastical condition for binding, combination with gene transcription rates 
-		gene.pol_on_gene.append(0)
-		mrna=molecules.MRNA("mRNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
+		if isinstance(self.mypolymerase, molecules.RNAPolymeraseII): 
+			gene.pol_on_gene.append(0)
+			mrna=molecules.MRNA("mRNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
 
+		#if isinstance(self.mypolymerase, molecules.RNAPolymeraseI):
+			#gene.pol_on_gene[0].append(0)
+			#rna=molecules.RNA("RNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
+
+		#if isinstance(self.mypolymerase, molecules.RNAPolymeraseIII):
+			#gene.pol_on_gene[0].append(0)
+			#rna=molecules.RNA("RNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
+
+		
 		#bigger polymerase: has size of polymerase_size in both directions
 		if self.polymerase_size>len(gene.sequence_binding):
 			for i in range(len(gene.sequence_binding)):
@@ -168,8 +182,10 @@ class Transcription(processes.Process):
 		nuc=gene.sequence[pos]
 		if nuc=='T':
 			mrna.sequence+='U'
+			molecules.NucleotidPool.count_nuc[nuc]+=-1
 		else:
 			mrna.sequence+=nuc
+			molecules.NucleotidPool.count_nuc[nuc]+=-1
 
 		#if we are not on the end of the ORF-string
 		if pos+1<len(gene.sequence_binding):
@@ -184,7 +200,6 @@ class Transcription(processes.Process):
 
 			#if position space in front of polymerase is empty
 			elif gene.sequence_binding[pos+self.polymerase_size]==0:
-				print('here')
 				gene.pol_on_gene[index]+=1
 				gene.sequence_binding[pos+self.polymerase_size]=mrna
 				if pos >= self.polymerase_size:
@@ -202,11 +217,11 @@ class Transcription(processes.Process):
 		self.mypolymerase.count+=1
 		gene.pol_num -=1
 
-		mrna = gene.sequence_binding[position]
+		rna = gene.sequence_binding[position]
 		gene.sequence_binding[position]=0
 		del gene.pol_on_gene[gene.pol_on_gene.index(position)]
 
-		return mrna
+		return rna
 
 
 	def rand_distr(gene): #(not finished)function that compares a random number to the probability of ocurrence of a dtermined gene to determine (according to its probability) if it will be transcribed

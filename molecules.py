@@ -220,7 +220,7 @@ class Gene(BioMoleculeCount):
         self.sequence_binding=[0]*len(sequence)
         self.rnas_transcribed=0 							#number of transcribed RNAs during one transcription-process
         self.pol_on_gen = []								#nucleotides transcribed by polymerases on the gene
-        self.transc_rate=32
+        self.rate=32
 						
         
     ###### COMMENT for DATA GROUP #######
@@ -337,28 +337,52 @@ class Chromosome:
 
 #####this method will check for bound regions in the chromosome######
 
-#    def chromosome_bound(self, range):
-#
-#        if isinstance(range, list):
-#            #range[0]: startposition of test, range[1]: endposition of test
- #           bound_stuff=[]
- #           for tuples in self.binding_molecules[0]:
- #               if tuples[0]>range and tuples[1]>=range:
- #               	return None
- #               elif 
- #               	if loweststart!=0:
+    def chromosome_bound(self, range):
 
- #              	loweststart=tuples[0]
- #               elif tuples[1]<=range:
+        if isinstance(range, list):
+            #range[0]: startposition of test, range[1]: endposition of test
+            iter=0
+            bound_stuff=[]
+            bound_found=False
+            for tuples in self.binding_molecules[0]:
+
+                if bound_found==False:
+                    if tuples[0]>range[1] and iter==0:
+                        return None
+                    elif tuples[0]>range[0] and tuples[0]>=range[1]:
+                        return None
+                    elif tuples[1]<range[0] and tuples[1]<range[0]:
+                        pass
+                    elif tuples[0]<=range[0] and tuples[1]>=range[1]:
+                        bound_stuff.append(self.binding_molecules[1][self.binding_molecules[0].index(tuples)])
+                        return bound_stuff
+                    elif tuples[1]<range[1]:
+                        bound_stuff.append(self.binding_molecules[1][self.binding_molecules[0].index(tuples)])
+                        bound_found=True
+                    
+                else:
+                    if tuples[0]>range[1]:
+                        return bound_stuff
+                    elif tuples[1]>range[1]:
+                        bound_stuff.append(self.binding_molecules[1][self.binding_molecules[0].index(tuples)])
+                        return bound_stuff
+                    else:
+                        bound_stuff.append(self.binding_molecules[1][self.binding_molecules[0].index(tuples)])
+                iter+=1
+            return bound_stuff
 
 
-  #      	pass
-  #      elif isinstance(range, int):
-  #          for tuples in self.binding_molecules[0]:
-  #              if tuples[0]<=range and tuples[1]>=range:
-  #                  return self.binding_molecules[1][self.binding_molecules[0].index(tuples)]
-  #              elif tuples[0]>range:
-  #                  break
-  #         
-  #      else:
-  #      	print("Argument type not expected (list or int)")
+
+        elif isinstance(range, int):
+            for tuples in self.binding_molecules[0]:
+                if tuples[0]<=range and tuples[1]>=range:
+                    return self.binding_molecules[1][self.binding_molecules[0].index(tuples)]
+                elif tuples[0]>range:
+                    break
+           
+        else:
+            print("Argument type not expected (list or int)")
+
+    #### method needed which stores a tuple of start&end and bound molecule in the ordered (!!!) list bindnig_molecules
+    def bind_to_chrom(start, end):
+        pass

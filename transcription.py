@@ -60,6 +60,7 @@ class Transcription(processes.Process):
 		#genedic=model.genes
 		#rna_pool=model.states
 
+		#number still needed: empirically! 
 		update_per_s=1000
 
 
@@ -88,7 +89,7 @@ class Transcription(processes.Process):
 		#testprints
 		#print(transc_gene.name)
 		#print(transc_gene.sequence)	
-		#print(transc_gene.pol_on_gene[0])
+		#print(transc_gene.pol_on_gene)
 
 		######for visualization of selected genes ################
 		#if transc_gene.name in self.allgenes[0]:
@@ -98,20 +99,14 @@ class Transcription(processes.Process):
 		#	self.allgenes[1].append(1)
 		#########################################################
 
-		i=None
-		if isinstance(self.mypolymerase, molecules.RNAPolymeraseII):
-			i=0
-		#else: check for other RNA-Polymerases associated with t/rRNA-production
-
-		#new variable i -> specific for type of transcription: 0 for mRNA, 1 for rRNA, 2 for tRNA
-
-		if not transc_gene.pol_on_gene[i]:
+		
+		if not transc_gene.pol_on_gene:
 			self.initiate(transc_gene)
 		else:
 			#if gene very long - likely to have a second pol binding there
 				#self.initiate(transc_gene)
-			pol_position=random.choice(transc_gene.pol_on_gene[i])
-			rna = self.transcribe(transc_gene, pol_position,i)
+			pol_position=random.choice(transc_gene.pol_on_gene)
+			rna = self.transcribe(transc_gene, pol_position)
 			if isinstance(rna, molecules.MRNA):
 				#if mrna.name in model.states:
 				#	model.states[mrna.name].append(mrna)
@@ -150,7 +145,7 @@ class Transcription(processes.Process):
 		
 		#optional: add stochastical condition for binding, combination with gene transcription rates
 			if isinstance(self.mypolymerase, molecules.RNAPolymeraseII): 
-				gene.pol_on_gene[0].append(0)
+				gene.pol_on_gene.append(0)
 				mrna=molecules.MRNA("mRNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
 
 			#bigger polymerase: has size of polymerase_size in both directions
@@ -164,11 +159,11 @@ class Transcription(processes.Process):
 			self.mypolymerase.count+=-1
 
 
-	def transcribe(self, gene, position,i):
+	def transcribe(self, gene, position):
 
 		""" elongate mRNA for given ORF for only one step. if ORF ends: call terminate-function """
 		pos=position
-		index=gene.pol_on_gene[i].index(position)
+		index=gene.pol_on_gene.index(position)
 
 		mrna=gene.sequence_binding[pos]
 
@@ -184,31 +179,31 @@ class Transcription(processes.Process):
 
 			#if coding region is ending: no macromolecule is thought to disturb the elongation process
 			if pos+self.polymerase_size>=len(gene.sequence_binding):
-				gene.pol_on_gene[i][index]+=1
+				gene.pol_on_gene[index]+=1
 				if pos >= self.polymerase_size:
 					gene.sequence_binding[pos-self.polymerase_size]=0
 				return 0
 
 			#if position space in front of polymerase is empty
 			elif gene.sequence_binding[pos+self.polymerase_size]==0:
-				gene.pol_on_gene[i][index]+=1
+				gene.pol_on_gene[index]+=1
 				gene.sequence_binding[pos+self.polymerase_size]=mrna
 				if pos >= self.polymerase_size:
 					gene.sequence_binding[pos-self.polymerase_size]=0
 				return 0
 
 		else:
-			return self.terminate(gene, position,i)
+			return self.terminate(gene, position)
 		
 
 
-	def terminate(self, gene, position,i):
+	def terminate(self, gene, position):
 		""" separate mRNA-DNA-Polymerase-complex. release and store new mRNA """
 		
 		self.mypolymerase.count+=1
 
 		rna = gene.sequence_binding[position]
 		gene.sequence_binding[position]=0
-		del gene.pol_on_gene[i][gene.pol_on_gene[i].index(position)]
+		del gene.pol_on_gene[gene.pol_on_gene.index(position)]
 
 		return rna

@@ -163,7 +163,3 @@ class ModelData:
             gene[gene_id[i]] = mol.Gene(gene_id[i], gene_name[i], which_chr[i], gene_seq[i], loc_list[i])
 
         return gene
-
-
-    gene = createchromosomes()
-    print(gene)

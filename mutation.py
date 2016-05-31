@@ -15,8 +15,8 @@ sequence_to_replicate = ['A','G','C','T','T','G','A','C','T','A',
                          'A','G','C','T','T','G','A','C','T','A',
                          'A','G','C','T','T','G','A','C','T','A']
 
-prob=[]
-new_chrom=[]
+prob= []
+new_chrom= []
 mut = []
 ts_position = []
 tv_position = []

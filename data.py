@@ -20,7 +20,7 @@ class Chromosome:
     def __init__(self, id ,fastaname):
         self._id=id
         self._fastaname=fastaname
-
+        self.replicate_ori_bound = False
         
         #read in the file, delete the headers, concatenate the single lines of the sequence and store them as a single string in sequence
         with open(self._fastaname) as chr_fasta:

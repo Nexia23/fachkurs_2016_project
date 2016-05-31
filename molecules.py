@@ -169,17 +169,33 @@ class Polymerase(BioMoleculeCount):
    
 
 
+class RNAPolymeraseI(Polymerase):
+    """
+    A polymerase that generates rRNAs from DNA sequences.
+    """
+    def __init__(self, mid, name, count=0):
+        super().__init__(mid, name, count)
+
 class RNAPolymeraseII(Polymerase):
     """
     A polymerase that generates mRNAs from DNA sequences.
     """
     def __init__(self, mid, name, count=0):
-    	super().__init__(mid, name, count)
+        super().__init__(mid, name, count)
+
+class RNAPolymeraseIII(Polymerase):
+    """
+    A polymerase that generates tRNAs from DNA sequences.
+    """
+    def __init__(self, mid, name, count=0):
+        super().__init__(mid, name, count)
+
+
 
 
 class Gene(BioMoleculeCount):
 
-	 """
+    """
     an object for the gene sequence with the attributes:
     id -> gene id
     name -> gene name
@@ -195,24 +211,23 @@ class Gene(BioMoleculeCount):
     gene.sequence -> gives the sequence of the gene
     """
 
-    def __init__(self, mid, name, chr, sequence, count=0):
-        #self.__location = location
+    def __init__(self, mid, name, chr, sequence, location, count=0):
+        
         super().__init__(mid, name, count)
+        self.__location = location
         self.__chr  = chr
         self.__sequence = sequence 
         self.sequence_binding=[0]*len(sequence)
-        self.pol_on_gene=[[],[],[]] 						#polymerases on gene: mRNA, rRNA, tRNA-production
-        self.rnas_transcribed=0								#number of transcribed RNAs during one transcription-process
-
+        self.rnas_transcribed=0 							#number of transcribed RNAs during one transcription-process
+        self.pol_on_gen = []								#nucleotides transcribed by polymerases on the gene
+        self.transc_rate=32
+						
+        
     ###### COMMENT for DATA GROUP #######
     #feel free to replace 'sequence'-information by start-, end-positions and strand (+/-)
 
     ###### COMMENT FOR REPLICATION_GROUP #######
     #count: 1 for unreplicated gene, 2 for copied gene 
-
-    #@property
-    #def location(self):
-    #   return self.__location
 
     @property
     def chr(self):
@@ -221,6 +236,12 @@ class Gene(BioMoleculeCount):
     @property
     def sequence(self):
         return self.__sequence
+
+    @property
+    def location(self):
+        return self.__location
+
+
         
     @sequence.setter
     def sequence(self, value):
@@ -229,18 +250,16 @@ class Gene(BioMoleculeCount):
             # TODO: check for valid nucleotides here
         self.__sequence = value.upper()
 
+    
 
 
-
-
-class Chromosome(object):
+class Chromosome:
     """
-    an object for the chromosome with the attributes:
+    An object for the chromosome with the attributes:
     id -> gives out the chromosome in integer form 1-16, 17 = mitochondrial chromosome
     fastaname -> is only important for the initiation of the object and used by the function createchromosomes
     sequence -> sequence of the whole chromosome
     revsequence -> the reverse sequence of the whole chromosome
-
     possible operations are:
     gene.id -> gives the chromosome number 1-16, 17 = mitochondrial chromosome
     gene.sequence -> gives the sequence of the chromosome
@@ -249,15 +268,30 @@ class Chromosome(object):
     def __init__(self, id ,fastaname):
         self._id=id
         self._fastaname=fastaname
+        self.binding_molecules=[[],[]]	#list with tuples of start and end positions of occupied regions in [0] and the binding molecule in [1]
+
         
         #read in the file, delete the headers, concatenate the single lines of the sequence and store them as a single string in sequence
         with open(self._fastaname) as chr_fasta:
             chr_list = chr_fasta.read().splitlines() 
         chr_list[0] = ""
-        self._sequence = "".join(chr_list)
+        #self._sequence = "".join(chr_list)
+        
+
+
+        sequence_str = "".join(chr_list)
+        self._sequence = list(sequence_str)
+        
+
 
         #generate the reverse sequence
-        self._revsequence = self._sequence[::-1]
+
+        converter_dictionary = {"A" : "T", "T": "A", "C": "G", "G": "C"}
+
+        sequence_str = list(sequence_str)
+        for i in range(len(sequence_str)):
+            sequence_str[i] = converter_dictionary[sequence_str[i]]
+        self._revsequence = sequence_str
 
     #add befehl   
     def __add__(self,chromosome):
@@ -266,7 +300,6 @@ class Chromosome(object):
         self.sequence=self.sequence+ chromosome.sequence
         self.revsequence=self.revsequence+ chromosome.revsequence
         return self
-    
     
     #getter für id, sequence & revsequence
 
@@ -282,11 +315,11 @@ class Chromosome(object):
     @property
     def sequence(self):
         return self._sequence
-    @sequence.setter
-    def sequence(self, value):
-        if not isinstance(value, str):
-            raise TypeError("Sequence must be a String.")
-        self._sequence = value
+    #@sequence.setter
+    #def sequence(self, value):
+    #    if not isinstance(value, str):
+    #        raise TypeError("Sequence must be a String.")
+    #    self._sequence = value
         
     @property
     def revsequence(self):
@@ -300,3 +333,32 @@ class Chromosome(object):
     @property
     def fastaname(self):
         return self._fastaname
+
+
+#####this method will check for bound regions in the chromosome######
+
+#    def chromosome_bound(self, range):
+#
+#        if isinstance(range, list):
+#            #range[0]: startposition of test, range[1]: endposition of test
+ #           bound_stuff=[]
+ #           for tuples in self.binding_molecules[0]:
+ #               if tuples[0]>range and tuples[1]>=range:
+ #               	return None
+ #               elif 
+ #               	if loweststart!=0:
+
+ #              	loweststart=tuples[0]
+ #               elif tuples[1]<=range:
+
+
+  #      	pass
+  #      elif isinstance(range, int):
+  #          for tuples in self.binding_molecules[0]:
+  #              if tuples[0]<=range and tuples[1]>=range:
+  #                  return self.binding_molecules[1][self.binding_molecules[0].index(tuples)]
+  #              elif tuples[0]>range:
+  #                  break
+  #         
+  #      else:
+  #      	print("Argument type not expected (list or int)")

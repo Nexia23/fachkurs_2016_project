@@ -37,7 +37,10 @@ class BioMolecule:
 
     @mass.setter
     def mass(self, value):
-        self.__mass = value
+        if not (isinstance(value, float) or isinstance(value, int)):
+            raise Exception("mass must be numeric")
+        else:
+            self.__mass = value
 
     def __repr__(self): #string "self.name,type"		#print(list(object))
         return ','.join([self.name, str(type(self))])
@@ -174,8 +177,23 @@ class RNAPolymeraseII(Polymerase):
     	super().__init__(mid, name, count)
 
 
-
 class Gene(BioMoleculeCount):
+
+	 """
+    an object for the gene sequence with the attributes:
+    id -> gene id
+    name -> gene name
+    chr -> which chromosome the gene is on in integer form, 1-15 und 17 = mitochondrial chromosome and 18 = 2-micron plasmid
+    sequence -> sequence of the dna which is transcribed
+    count -> number of copies of the gene
+    sequence_binding -> records if the gene is bound (=1) or currently not bound (=0), important for transcription vs replikation 
+    pol_on_gene -> positions of polymerases on the gene
+
+    possible operations are:
+    gene.mid -> gives the gene name
+    gene.chr -> gives the chromosome on which the gene is on
+    gene.sequence -> gives the sequence of the gene
+    """
 
     def __init__(self, mid, name, chr, sequence, count=0):
         #self.__location = location
@@ -184,7 +202,7 @@ class Gene(BioMoleculeCount):
         self.__sequence = sequence 
         self.sequence_binding=[0]*len(sequence)
         self.pol_on_gene=[[],[],[]] 						#polymerases on gene: mRNA, rRNA, tRNA-production
-
+        self.rnas_transcribed=0								#number of transcribed RNAs during one transcription-process
 
     ###### COMMENT for DATA GROUP #######
     #feel free to replace 'sequence'-information by start-, end-positions and strand (+/-)
@@ -194,8 +212,7 @@ class Gene(BioMoleculeCount):
 
     #@property
     #def location(self):
-    #    return self.__location
-
+    #   return self.__location
 
     @property
     def chr(self):
@@ -211,3 +228,75 @@ class Gene(BioMoleculeCount):
             raise Exception("sequence must be a string")
             # TODO: check for valid nucleotides here
         self.__sequence = value.upper()
+
+
+
+
+
+class Chromosome(object):
+    """
+    an object for the chromosome with the attributes:
+    id -> gives out the chromosome in integer form 1-16, 17 = mitochondrial chromosome
+    fastaname -> is only important for the initiation of the object and used by the function createchromosomes
+    sequence -> sequence of the whole chromosome
+    revsequence -> the reverse sequence of the whole chromosome
+
+    possible operations are:
+    gene.id -> gives the chromosome number 1-16, 17 = mitochondrial chromosome
+    gene.sequence -> gives the sequence of the chromosome
+    gene.revsequence -> gives out the reverse sequence of the chromosome
+    """
+    def __init__(self, id ,fastaname):
+        self._id=id
+        self._fastaname=fastaname
+        
+        #read in the file, delete the headers, concatenate the single lines of the sequence and store them as a single string in sequence
+        with open(self._fastaname) as chr_fasta:
+            chr_list = chr_fasta.read().splitlines() 
+        chr_list[0] = ""
+        self._sequence = "".join(chr_list)
+
+        #generate the reverse sequence
+        self._revsequence = self._sequence[::-1]
+
+    #add befehl   
+    def __add__(self,chromosome):
+        if not isinstance(chromosome,Chromosome):
+            raise TypeError
+        self.sequence=self.sequence+ chromosome.sequence
+        self.revsequence=self.revsequence+ chromosome.revsequence
+        return self
+    
+    
+    #getter für id, sequence & revsequence
+
+    @property
+    def id(self):
+        return self._id
+    @id.setter
+    def id(self, value):
+        if not isinstance(value, int):
+            raise TypeError("ID must be an Integer.")
+        self._id = value
+        
+    @property
+    def sequence(self):
+        return self._sequence
+    @sequence.setter
+    def sequence(self, value):
+        if not isinstance(value, str):
+            raise TypeError("Sequence must be a String.")
+        self._sequence = value
+        
+    @property
+    def revsequence(self):
+        return self._revsequence
+    @revsequence.setter
+    def revsequence(self, value):
+        if not isinstance(value, str):
+            raise TypeError("RevSequence must be a String.")
+        self._revsequence = value
+        
+    @property
+    def fastaname(self):
+        return self._fastaname

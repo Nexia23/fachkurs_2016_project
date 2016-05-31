@@ -41,7 +41,7 @@ class Transcription(processes.Process):
 		self.polymerase_size=17
 
 		#####for visualization of selected genes
-		self.allgenes=[[],[]]
+		#self.allgenes=[[],[]]
 		#########################################
 
 
@@ -73,10 +73,9 @@ class Transcription(processes.Process):
     			#	model.states[rna.name] = [rna]
 
     	####visualization of selected genes ######
-		print(self.allgenes)
-		plt.plot(range(len(self.allgenes[0])),self.allgenes[1])
-		plt.xlabel(self.allgenes[0])
-		plt.savefig('tests/count_histogram_genes.pdf')
+		#plt.plot(range(len(self.allgenes[0])),self.allgenes[1])
+		#plt.xlabel(self.allgenes[0])
+		#plt.savefig('tests/count_histogram_genes.pdf')
 		###########################################
 
 		return rna_pool
@@ -92,11 +91,11 @@ class Transcription(processes.Process):
 		#print(transc_gene.pol_on_gene[0])
 
 		######for visualization of selected genes ################
-		if transc_gene.name in self.allgenes[0]:
-			self.allgenes[1][self.allgenes[0].index(transc_gene.name)]+=1
-		else:
-			self.allgenes[0].append(transc_gene.name)
-			self.allgenes[1].append(1)
+		#if transc_gene.name in self.allgenes[0]:
+		#	self.allgenes[1][self.allgenes[0].index(transc_gene.name)]+=1
+		#else:
+		#	self.allgenes[0].append(transc_gene.name)
+		#	self.allgenes[1].append(1)
 		#########################################################
 
 		i=None
@@ -213,7 +212,3 @@ class Transcription(processes.Process):
 		del gene.pol_on_gene[i][gene.pol_on_gene[i].index(position)]
 
 		return rna
-
-
-		
-

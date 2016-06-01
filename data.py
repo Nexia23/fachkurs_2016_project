@@ -20,7 +20,7 @@ class Chromosome:
     def __init__(self, id ,fastaname):
         self._id=id
         self._fastaname=fastaname
-        self.replicate_ori_bound = False
+        self.replication_ori_bound = False
         
         #read in the file, delete the headers, concatenate the single lines of the sequence and store them as a single string in sequence
         with open(self._fastaname) as chr_fasta:
@@ -96,12 +96,16 @@ class Gene:
     sequence -> sequence of the dna which is transcribed
     count ->
     sequence_binding -> records if the gene is bound (=1) or currently not bound (=0), important for transcription vs replikation (i think)
+    transrate -> float of the transkription rate, if none was found a median of all values was used, set to per second
+    halflive -> float of the halflive time, used for decay of the mRNA, if none was found, a median of all values was used set to per second
 
     possible operations are:
     gene.mid -> provides the gene name
     gene.chr -> provides the chromosome on which the gene is on
     gene.sequence -> provides the sequence of the gene
     gene.name -> provides the name of the gene
+    gene.translate -> provides the transcription rate
+    gene.halflive -> provides the halflive of the corresponding mRNA
     """
     def __init__(self, mid, name, chr, sequence, location, transrate, halflive, count=0):
         

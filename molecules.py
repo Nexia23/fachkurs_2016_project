@@ -214,10 +214,10 @@ class Chromosome:
     gene.sequence -> gives the sequence of the chromosome
     gene.revsequence -> gives out the reverse sequence of the chromosome
     """
-    def __init__(self, id,  arf, fastaname):
+    def __init__(self, id, fastaname):
         self._id=id
         self._fastaname=fastaname
-        self._arf = arf
+       # self._arf = arf
         self.binding_molecules=[[],[]]  #list with tuples of start and end positions of occupied regions in [0] and the binding molecule in [1]
         self.replication_ori_bound = False
         
@@ -359,8 +359,9 @@ class Gene:
     gene.halflive -> provides the halflive of the corresponding mRNA
     """
 
-    def __init__(self, mid, name, chr, sequence, location, transrate, halflive, count=0):
+    def __init__(self, mid, name, chr, sequence, location, transrate, halflive, count=1):
         
+        self.count = count
         self.__mid = mid
         self.__name = name
         self.__location = location
@@ -370,15 +371,13 @@ class Gene:
         self.__halflive = halflive 
         self.sequence_binding=[0]*len(sequence)
         self.rnas_transcribed=0 							#number of transcribed RNAs during one transcription-process
-        self.pol_on_gen = []								#nucleotides transcribed by polymerases on the gene
+        self.pol_on_gene = []								#nucleotides transcribed by polymerases on the gene
 						
         
         if numpy.isnan(self.__transrate):
             self.__transrate = 0.00123056
         if numpy.isnan(self.__halflive):
             self.__halflive = 0.262
-    ###### COMMENT for DATA GROUP #######
-    #feel free to replace 'sequence'-information by start-, end-positions and strand (+/-)
 
     ###### COMMENT FOR REPLICATION_GROUP #######
     #count: 1 for unreplicated gene, 2 for copied gene 

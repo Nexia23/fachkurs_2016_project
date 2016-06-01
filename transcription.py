@@ -70,11 +70,11 @@ class Transcription(processes.Process):
 		#number still needed: empirically! 
 		update_per_s=2000
 
-		gene_id, weights=make_weights(genedic)
+		gene_id, weights=self.make_weights(genedic)
 
 		for steps in range(update_per_s):
-			rna = self.onestep(genedic)
-			#rna.self.onestep(genedic, weights, gene_ids)
+			#rna = self.onestep(genedic)
+			rna=self.onestep(genedic, weights, gene_id)
 			if isinstance(rna, molecules.MRNA):
 				#rna_pool.append(rna)
 				if rna.name in model.states:
@@ -92,11 +92,10 @@ class Transcription(processes.Process):
 
 
 			
-	def onestep(self,genedic):			#expect a dictionary of genes 
-	#def onestep(self, genedic, weights, gene_ids)
+	#def onestep(self,genedic):			#expect a dictionary of genes 
+	def onestep(self, genedic, weights, gene_ids):
 
 		transc_gene=self.select_gene(genedic)
-		#transc_gene=self.select_gene2(genedic, weights)
 
 		#testprints
 		#print(transc_gene.name)
@@ -115,10 +114,12 @@ class Transcription(processes.Process):
 			if transc_gene.sequence_binding[0]==0 and self.mypolymerase.count>0:
 				self.initiate(transc_gene)
 		else:
-			#new_pol = rand_distr(transc_gene) 
+			new_pol = self.rand_distr(transc_gene, gene_ids, weights) 
 			#function that will compare the probability of ocurrence of the transcription rate of the gene with a random number
-			#if transc_gene.sequence_binding[0]==0 and self.mypolymerase.count>0 and new_pol == 1: 
-			if transc_gene.sequence_binding[self.polymerase_size-1]==0 and self.mypolymerase.count>0 and random.randint(1,200)==1:
+
+			#if transc_gene.sequence_binding[self.polymerase_size-1]==0 and self.mypolymerase.count>0 and random.randint(1,200)==1:
+			if transc_gene.sequence_binding[self.polymerase_size-1]==0 and self.mypolymerase.count>0 and new_pol == 1:
+
 				#check whether the whole region the polymerase will occupy is free
 				self.initiate(transc_gene)
 			else:
@@ -259,11 +260,10 @@ class Transcription(processes.Process):
 		return rna
 
 
-	def rand_distr(gene): #(not finished)function that compares a random number to the probability of 
-	#ocurrence of a dtermined gene to determine (according to its probability) if it will be transcribed
-		ran = random.uniform(0,1)
-		
-		if gene.indiv_transc_rate>= ran:
+	def rand_distr(self, gene, gene_ids, weights): #if gene_ids and weight are global we don't need to send them in the function 
+		ran=random.uniform(0,5)
+		index_id = gene_ids.index(gene.mid)
+		if weights[index_id]>= ran:
 			return 1
 		else:
 			return 0

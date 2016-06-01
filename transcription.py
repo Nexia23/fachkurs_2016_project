@@ -121,7 +121,8 @@ class Transcription(processes.Process):
 
 		copies=[]
 		transc_rate=[]
-		for g in genedic.keys():
+		gene_ids=list(genedic.keys())
+		for g in gene_ids:
 			copies.append(genedic[g].count)
 			transc_rate.append(genedic[g].rate)
 		copies=np.array(copies)
@@ -132,7 +133,7 @@ class Transcription(processes.Process):
 
 		rand_index=np.random.choice(range(len(weights)),p=weights)
 
-		gene_ids=list(genedic.keys())	
+			
 		transc_gene=genedic[gene_ids[rand_index]]
 
 		return transc_gene

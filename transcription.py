@@ -111,10 +111,9 @@ class Transcription(processes.Process):
 			if transc_gene.sequence_binding[0]==0 and self.mypolymerase.count>0:
 				self.initiate(transc_gene)
 		else:
-			#new_pol = rand_distr(transc_gene) 
+			new_pol = rand_distr(transc_gene, gene_ids, weights) 
 			#function that will compare the probability of ocurrence of the transcription rate of the gene with a random number
-			#if transc_gene.sequence_binding[0]==0 and self.mypolymerase.count>0 and new_pol == 1: 
-			if transc_gene.sequence_binding[self.polymerase_size-1]==0 and self.mypolymerase.count>0 and random.randint(1,4)==1:
+			if transc_gene.sequence_binding[self.polymerase_size-1]==0 and self.mypolymerase.count>0 and new_pol == 1:
 				#check whether the whole region the polymerase will occupy is free
 				self.initiate(transc_gene)
 			else:
@@ -263,11 +262,10 @@ class Transcription(processes.Process):
 		return rna
 
 
-	def rand_distr(gene): #(not finished)function that compares a random number to the probability of 
-	#ocurrence of a dtermined gene to determine (according to its probability) if it will be transcribed
-		ran = random.uniform(0,1)
-		
-		if gene.indiv_transc_rate>= ran:
+	def rand_distr(gene, gene_ids, weights): #if gene_ids and weight are global we don't need to send them in the function 
+		ran=random.uniform(0,5)
+		index_id = gene_ids.index(gene.mid)
+		if weights[index_id]>= ran:
 			return 1
 		else:
 			return 0

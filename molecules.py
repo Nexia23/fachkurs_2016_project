@@ -97,7 +97,7 @@ class BioMoleculeCount(BioMolecule):        #new variable: number of molecules o
 
 
 class NucleotidPool(BioMolecule):
-    def __init__(self, count):
+    def __init__(self, mid, name, count):
         super().__init__(mid, name, count)
 
         self.count_nuc={'A': count, 'C': count, 'G': count, 'T': count, 'U': count}
@@ -218,7 +218,7 @@ class Gene(BioMoleculeCount):
     gene.sequence -> gives the sequence of the gene
     """
 
-    def __init__(self, mid, name, chr, sequence, location, count=0):
+    def __init__(self, mid, name, chr, sequence, location, rate, count=0):
         
         super().__init__(mid, name, count)
         self.__location = location
@@ -226,8 +226,8 @@ class Gene(BioMoleculeCount):
         self.__sequence = sequence 
         self.sequence_binding=[0]*len(sequence)
         self.rnas_transcribed=0 							#number of transcribed RNAs during one transcription-process
-        self.pol_on_gen = []								#nucleotides transcribed by polymerases on the gene
-        self.rate=32
+        self.pol_on_gene = []								#nucleotides transcribed by polymerases on the gene
+        self.rate=rate
 						
         
     ###### COMMENT for DATA GROUP #######

@@ -8,6 +8,8 @@ from matplotlib import pyplot as plt
 ################### TO DO !!!!!! ########################
 #look to data: elongation-processes per 1s and transcripion-rates (Huyen)
 
+#include real data and global data-construction
+
 #get information how many mRNAs are transcribed at the moment
 
 #at the moment: only one polymerase transcribes an RNA ! (Paula)
@@ -24,7 +26,7 @@ class Transcription(processes.Process):
 	"Transcription process needs to be described."
 
 
-	def __init__(self, id, name, polymerase):
+	def __init__(self, id, name, polymerase, nucleotide_pool):
 		""" All new Transcription variables need to be implemented."""
 		
 		super().__init__(id, name)
@@ -32,13 +34,14 @@ class Transcription(processes.Process):
 		#id_enzymes= one single RNA Polymerase -> not necessary as polymerase is an argument of Transcription 
 		# -> multiple transcription processes with different polymerases possible
 		#id_substrates= a dictionary with all genes of the genome: {geneid1: Geneobject, geneid2: GeneObject, ...} 
-		self.mypolymerase=molecules.RNAPolymeraseII("RNAPolIIpool", "RNAPolII", 200) 
+		self.mypolymerase=polymerase
+		self.my_nucleotides=nucleotide_pool
 
 				#polymerase=RNAPolymeraseII(needs to be specified) -> initialization can be done in transcription or model
 				#expect polymerase to be unbound -> check in model.py
 
 		#length of occupied sequence by RNA-Polymerase II on DNA: already validated with data!
-		self.polymerase_size=17
+		self.polymerase_size=3
 
 		#####for visualization of selected genes
 		#self.allgenes=[[],[]]
@@ -61,11 +64,13 @@ class Transcription(processes.Process):
 		#rna_pool=model.states
 
 		#number still needed: empirically! 
-		update_per_s=1000
+		update_per_s=2000
 
+		#weights=make_weights(genedic)
 
 		for steps in range(update_per_s):
 			rna = self.onestep(genedic)
+			#rna.self.onestep(genedic, weights)
 			if isinstance(rna, molecules.MRNA):
 				rna_pool.append(rna)
 				#if rna.name in model.states:
@@ -84,8 +89,11 @@ class Transcription(processes.Process):
 
 			
 	def onestep(self,genedic):			#expect a dictionary of genes 
+	#def onestep(self, genedic, weights)
 
 		transc_gene=self.select_gene(genedic)
+		#transc_gene=self.select_gene2(genedic, weights)
+
 		#testprints
 		#print(transc_gene.name)
 		#print(transc_gene.sequence)	
@@ -99,11 +107,15 @@ class Transcription(processes.Process):
 		#	self.allgenes[1].append(1)
 		#########################################################
 
-		if not transc_gene.pol_on_gene and transc_gene.sequence_binding[0]==0 and self.mypolymerase.count>0:
-			self.initiate(transc_gene)
+		if not transc_gene.pol_on_gene:
+			if transc_gene.sequence_binding[0]==0 and self.mypolymerase.count>0:
+				self.initiate(transc_gene)
 		else:
-			new_pol = rand_distr(transc_gene) #function that will compare the probability of ocurrence of the transcription rate of the gene with a random number
-			if transc_gene.sequence_binding[0]==0 and self.mypolymerase.count>0 and new_pol == 1: 
+			#new_pol = rand_distr(transc_gene) 
+			#function that will compare the probability of ocurrence of the transcription rate of the gene with a random number
+			#if transc_gene.sequence_binding[0]==0 and self.mypolymerase.count>0 and new_pol == 1: 
+			if transc_gene.sequence_binding[self.polymerase_size-1]==0 and self.mypolymerase.count>0 and random.randint(1,4)==1:
+				#check whether the whole region the polymerase will occupy is free
 				self.initiate(transc_gene)
 			else:
 				pol_position=random.choice(transc_gene.pol_on_gene)
@@ -115,6 +127,31 @@ class Transcription(processes.Process):
 					#	model.states[mrna.name] = [mrna]
 					return mrna
 
+	def make_weights(self, genedic):
+		copies=[]
+		transc_rate=[]
+		gene_ids=list(genedic.keys())
+		for g in gene_ids:
+			copies.append(genedic[g].count)
+			transc_rate.append(genedic[g].rate)
+		copies=np.array(copies)
+		transc_rate=np.array(transc_rate)
+
+		weights=copies*transc_rate
+		weights=weights/sum(weights)
+		return weights
+
+
+	def select_gene2(self, genedic, weights):
+
+		#transcribed gene identified: no random selection, but weighted by copies of each gene
+
+		rand_index=np.random.choice(range(len(weights)),p=weights)
+
+			
+		transc_gene=genedic.keys()[rand_index] #question needed
+
+		return transc_gene
 
 	def select_gene(self, genedic):
 
@@ -128,9 +165,9 @@ class Transcription(processes.Process):
 			transc_rate.append(genedic[g].rate)
 		copies=np.array(copies)
 		transc_rate=np.array(transc_rate)
-		copie_probs=copies/sum(copies)
-		rate_probs=transc_rate/sum(transc_rate)
-		weights=copie_probs*rate_probs
+
+		weights=copies*transc_rate
+		weights=weights/sum(weights)
 
 		rand_index=np.random.choice(range(len(weights)),p=weights)
 
@@ -183,10 +220,10 @@ class Transcription(processes.Process):
 		nuc=gene.sequence[pos]
 		if nuc=='T':
 			mrna.sequence+='U'
-			molecules.NucleotidPool.count_nuc[nuc]+=-1
+			self.my_nucleotides.count_nuc['U']+=-1
 		else:
 			mrna.sequence+=nuc
-			molecules.NucleotidPool.count_nuc[nuc]+=-1
+			self.my_nucleotides.count_nuc[nuc]+=-1
 
 		#if we are not on the end of the ORF-string
 		if pos+1<len(gene.sequence_binding):
@@ -216,16 +253,18 @@ class Transcription(processes.Process):
 		""" separate mRNA-DNA-Polymerase-complex. release and store new mRNA """
 		
 		self.mypolymerase.count+=1
-		gene.pol_num -=1
-
 		rna = gene.sequence_binding[position]
-		gene.sequence_binding[position]=0
+		for p in range(self.polymerase_size+1):
+			gene.sequence_binding[position-p]=0
 		del gene.pol_on_gene[gene.pol_on_gene.index(position)]
+
+		print('terminate!')
 
 		return rna
 
 
-	def rand_distr(gene): #(not finished)function that compares a random number to the probability of ocurrence of a dtermined gene to determine (according to its probability) if it will be transcribed
+	def rand_distr(gene): #(not finished)function that compares a random number to the probability of 
+	#ocurrence of a dtermined gene to determine (according to its probability) if it will be transcribed
 		ran = random.uniform(0,1)
 		
 		if gene.indiv_transc_rate>= ran:

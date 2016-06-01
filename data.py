@@ -3,6 +3,7 @@ import sys
 import pandas as pd
 import numpy 
 
+
 class Chromosome:
     """
     An object for the chromosome with the attributes:

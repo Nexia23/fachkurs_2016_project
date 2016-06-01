@@ -98,7 +98,7 @@ class BioMoleculeCount(BioMolecule):        #new variable: number of molecules o
 
 
 class NucleotidPool(BioMolecule):
-    def __init__(self, count):
+    def __init__(self, mid, name, count):
         super().__init__(mid, name, count)
 
         self.count_nuc={'A': count, 'C': count, 'G': count, 'T': count, 'U': count}
@@ -197,6 +197,7 @@ class RNAPolymeraseIII(Polymerase):
     """
     def __init__(self, mid, name, count=0):
         super().__init__(mid, name, count)
+
 
 
 class Chromosome:
@@ -333,12 +334,8 @@ class Chromosome:
             print("Argument type not expected (list or int)")
 
     #### method needed which stores a tuple of start&end and bound molecule in the ordered (!!!) list bindnig_molecules
-    def bind_to_chrom(tuple, object):
-        for i in range(len(binding_molecules)):
-            if tuple[0] < binding_molecules[0::2][i][0]:
-                binding_molecules.insert(i, tuple)
-                binding_molecules.insert(i+1, object)
-
+    def bind_to_chrom(start, end):
+        pass
 
 
 class Gene:
@@ -362,9 +359,9 @@ class Gene:
     gene.halflive -> provides the halflive of the corresponding mRNA
     """
 
-    def __init__(self, mid, name, chr, sequence, location, transrate, halflive, count=0):
+    def __init__(self, mid, name, chr, sequence, location, transrate, halflive, count=1):
         
-        self.__count = count
+        self.count = count
         self.__mid = mid
         self.__name = name
         self.__location = location
@@ -374,8 +371,7 @@ class Gene:
         self.__halflive = halflive 
         self.sequence_binding=[0]*len(sequence)
         self.rnas_transcribed=0 							#number of transcribed RNAs during one transcription-process
-        self.pol_on_gen = []								#nucleotides transcribed by polymerases on the gene
-        self.rate=32
+        self.pol_on_gene = []								#nucleotides transcribed by polymerases on the gene
 						
         
         if numpy.isnan(self.__transrate):

@@ -99,20 +99,21 @@ class Transcription(processes.Process):
 		#	self.allgenes[1].append(1)
 		#########################################################
 
-		
-		if not transc_gene.pol_on_gene:
+		if not transc_gene.pol_on_gene and transc_gene.sequence_binding[0]==0 and self.mypolymerase.count>0:
 			self.initiate(transc_gene)
 		else:
-			#if gene very long - likely to have a second pol binding there
-				#self.initiate(transc_gene)
-			pol_position=random.choice(transc_gene.pol_on_gene)
-			rna = self.transcribe(transc_gene, pol_position)
-			if isinstance(rna, molecules.MRNA):
-				#if mrna.name in model.states:
-				#	model.states[mrna.name].append(mrna)
-				#else:
-				#	model.states[mrna.name] = [mrna]
-				return rna
+			new_pol = rand_distr(transc_gene) #function that will compare the probability of ocurrence of the transcription rate of the gene with a random number
+			if transc_gene.sequence_binding[0]==0 and self.mypolymerase.count>0 and new_pol == 1: 
+				self.initiate(transc_gene)
+			else:
+				pol_position=random.choice(transc_gene.pol_on_gene)
+				mrna = self.transcribe(transc_gene, pol_position)
+				if isinstance(mrna, molecules.MRNA):
+					#if mrna.name in model.states:
+					#	model.states[mrna.name].append(mrna)
+					#else:
+					#	model.states[mrna.name] = [mrna]
+					return mrna
 
 
 	def select_gene(self, genedic):
@@ -146,40 +147,35 @@ class Transcription(processes.Process):
 		#### from the data group: we expect an self.genes-dictionary in model.py containing all genes
 
 		#print(gene.sequence_binding)
-		#here or check if gene codes for mRNA, RNA or tRNA
+		if isinstance(self.mypolymerase, molecules.RNAPolymeraseII): 
+			gene.pol_on_gene.append(0)
+			mrna=molecules.MRNA("mRNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
 
-		if gene.sequence_binding[0]==0 and self.mypolymerase.count>0:
+		#if isinstance(self.mypolymerase, molecules.RNAPolymeraseI):
+			#gene.pol_on_gene[0].append(0)
+			#rna=molecules.RNA("RNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
+
+		#if isinstance(self.mypolymerase, molecules.RNAPolymeraseIII):
+			#gene.pol_on_gene[0].append(0)
+			#rna=molecules.RNA("RNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
+
 		
-		#optional: add stochastical condition for binding, combination with gene transcription rates
-			if isinstance(self.mypolymerase, molecules.RNAPolymeraseII): 
-				gene.pol_on_gene.append(0)
-				mrna=molecules.MRNA("mRNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
-
-			#if isinstance(self.mypolymerase, molecules.RNAPolymeraseI):
-				#gene.pol_on_gene[0].append(0)
-				#rna=molecules.RNA("RNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
-
-			#if isinstance(self.mypolymerase, molecules.RNAPolymeraseIII):
-				#gene.pol_on_gene[0].append(0)
-				#rna=molecules.RNA("RNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
-
-
-			#bigger polymerase: has size of polymerase_size in both directions
-			if self.polymerase_size>len(gene.sequence_binding):
-				for i in range(len(gene.sequence_binding)):
-					gene.sequence_binding[i]=mrna
-			else:
-				for i in range(self.polymerase_size):
-					gene.sequence_binding[i]=mrna		
+		#bigger polymerase: has size of polymerase_size in both directions
+		if self.polymerase_size>len(gene.sequence_binding):
+			for i in range(len(gene.sequence_binding)):
+				gene.sequence_binding[i]=mrna
+		else:
+			for i in range(self.polymerase_size):
+				gene.sequence_binding[i]=mrna		
 			
-			self.mypolymerase.count+=-1
+		self.mypolymerase.count+=-1
 
 
 	def transcribe(self, gene, position):
 
 		""" elongate mRNA for given ORF for only one step. if ORF ends: call terminate-function """
 		pos=position
-		index=gene.pol_on_gene.index(position)
+		index=gene.pol_on_gene.index(pos)
 
 		mrna=gene.sequence_binding[pos]
 
@@ -194,6 +190,7 @@ class Transcription(processes.Process):
 
 		#if we are not on the end of the ORF-string
 		if pos+1<len(gene.sequence_binding):
+			#!!!gene.pol_num +=1
 
 			#if coding region is ending: no macromolecule is thought to disturb the elongation process
 			if pos+self.polymerase_size>=len(gene.sequence_binding):
@@ -219,9 +216,20 @@ class Transcription(processes.Process):
 		""" separate mRNA-DNA-Polymerase-complex. release and store new mRNA """
 		
 		self.mypolymerase.count+=1
+		gene.pol_num -=1
 
 		rna = gene.sequence_binding[position]
 		gene.sequence_binding[position]=0
 		del gene.pol_on_gene[gene.pol_on_gene.index(position)]
 
 		return rna
+
+
+	def rand_distr(gene): #(not finished)function that compares a random number to the probability of ocurrence of a dtermined gene to determine (according to its probability) if it will be transcribed
+		ran = random.uniform(0,1)
+		
+		if gene.indiv_transc_rate>= ran:
+			return 1
+		else:
+			return 0
+

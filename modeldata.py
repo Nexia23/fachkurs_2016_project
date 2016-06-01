@@ -4,7 +4,8 @@ import string
 import translation
 import molecules as mol
 import re
-
+import pandas as pd
+import numpy
 
 class ModelData:
     """
@@ -54,27 +55,37 @@ class ModelData:
             return mrnas
 
     def createchromosomes():
-    
-        chr1=mol.Chromosome(1,"fsa_sequences/S288C_Chromosome I.fsa")
-        chr2=mol.Chromosome(2,"fsa_sequences/S288C_Chromosome II.fsa")
-        chr3=mol.Chromosome(3,"fsa_sequences/S288C_Chromosome III.fsa")
-        chr4=mol.Chromosome(4,"fsa_sequences/S288C_Chromosome IV.fsa")
-        chr5=mol.Chromosome(5,"fsa_sequences/S288C_Chromosome V.fsa")
-        chr6=mol.Chromosome(6,"fsa_sequences/S288C_Chromosome VI.fsa")
-        chr7=mol.Chromosome(7,"fsa_sequences/S288C_Chromosome VII.fsa")
-        chr8=mol.Chromosome(8,"fsa_sequences/S288C_Chromosome VIII.fsa")
-        chr9=mol.Chromosome(9,"fsa_sequences/S288C_Chromosome IX.fsa")
-        chr10=mol.Chromosome(10,"fsa_sequences/S288C_Chromosome X.fsa")
-        chr11=mol.Chromosome(11,"fsa_sequences/S288C_Chromosome XI.fsa")
-        chr12=mol.Chromosome(12,"fsa_sequences/S288C_Chromosome XII.fsa")
-        chr13=mol.Chromosome(13,"fsa_sequences/S288C_Chromosome XIII.fsa")
-        chr14=mol.Chromosome(14,"fsa_sequences/S288C_Chromosome XIV.fsa")
-        chr15=mol.Chromosome(15,"fsa_sequences/S288C_Chromosome XV.fsa")
-        chr16=mol.Chromosome(16,"fsa_sequences/S288C_Chromosome XVI.fsa")
-        chrmito=mol.Chromosome(17,"fsa_sequences/S288C_Chromosome Mito.fsa")
+
+        ori_raw = pd.read_excel("fsa_sequences/ORI.xls")
+        
+        arf = [[]] * 17
+
+        for i in range(16):
+            x = ori_raw[ori_raw.ix[:,0] == "chr"+str(i+1)]
+            arf[i] = x.ix[:,1:3].values.tolist()
+        
+
+
+        chr1=mol.Chromosome("Chr 1",arf[0],"fsa_sequences/S288C_Chromosome I.fsa")
+        chr2=mol.Chromosome("Chr 2",arf[1],"fsa_sequences/S288C_Chromosome II.fsa")
+        chr3=mol.Chromosome("Chr 3",arf[2],"fsa_sequences/S288C_Chromosome III.fsa")
+        chr4=mol.Chromosome("Chr 4",arf[3],"fsa_sequences/S288C_Chromosome IV.fsa")
+        chr5=mol.Chromosome("Chr 5",arf[4],"fsa_sequences/S288C_Chromosome V.fsa")
+        chr6=mol.Chromosome("Chr 6",arf[5],"fsa_sequences/S288C_Chromosome VI.fsa")
+        chr7=mol.Chromosome("Chr 7",arf[6],"fsa_sequences/S288C_Chromosome VII.fsa")
+        chr8=mol.Chromosome("Chr 8",arf[7],"fsa_sequences/S288C_Chromosome VIII.fsa")
+        chr9=mol.Chromosome("Chr 9",arf[8],"fsa_sequences/S288C_Chromosome IX.fsa")
+        chr10=mol.Chromosome("Chr 10",arf[9],"fsa_sequences/S288C_Chromosome X.fsa")
+        chr11=mol.Chromosome("Chr 11",arf[10],"fsa_sequences/S288C_Chromosome XI.fsa")
+        chr12=mol.Chromosome("Chr 12",arf[11],"fsa_sequences/S288C_Chromosome XII.fsa")
+        chr13=mol.Chromosome("Chr 13",arf[12],"fsa_sequences/S288C_Chromosome XIII.fsa")
+        chr14=mol.Chromosome("Chr 14",arf[13],"fsa_sequences/S288C_Chromosome XIV.fsa")
+        chr15=mol.Chromosome("Chr 15",arf[14],"fsa_sequences/S288C_Chromosome XV.fsa")
+        chr16=mol.Chromosome("Chr 16",arf[15],"fsa_sequences/S288C_Chromosome XVI.fsa")
+        chrmito=mol.Chromosome("Chr 17",arf[16],"fsa_sequences/S288C_Chromosome Mito.fsa")
 
         chr_list=[chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chrmito]
-    
+            
         return chr_list
 
     
@@ -89,8 +100,8 @@ class ModelData:
     def creategenes():
 
         with open("fsa_sequences/orf_coding.fasta") as orf_fasta:       #open the file, read it and create a list, where each element is a gene with header+sequence
-           orf_list = orf_fasta.read().replace("i>", "").replace("sub>", "").replace("->", "").split(">")
-    
+            orf_list = orf_fasta.read().replace("i>", "").replace("sub>", "").replace("->", "").split(">")
+        
         orf_list = orf_list[1:] #entfernen des ersten nicht vorhandenden elements
         orf_splitlist = [""]*len(orf_list)  #initialise the new list[gen][header=0 or gen=1]
         
@@ -106,7 +117,7 @@ class ModelData:
 
 
         gene_seq = [x[1] for x in orf_splitlist]
-    
+        
 
         """
         Gen ID
@@ -140,7 +151,7 @@ class ModelData:
         """
 
         gene_name_list = [""]*len(header_list)
-   
+
         for i in range(len(header_split)):
             gene_name_list[i] = header_split[i][1].split(" ", 1)
 
@@ -157,9 +168,32 @@ class ModelData:
         for i in range(len(header_list)):   #creates a list where loc_list[0] = all the tuples of locations for gene 0 in str form
             loc_list[i] = re.findall("([^-][\d]+?)-([\d]+?),", header_list[i])
 
-    
+        
+        """
+        transrate
+        """
+        transcription_raw = pd.read_excel("fsa_sequences/msb2010112-s1.xls")
+        
+        
+        transcription_raw[transcription_raw.ix[:,1]<0]=0    #negative werte auf 0 setzen
+        transcription_raw.ix[:,1]=transcription_raw.ix[:,1].divide(9000)    #in sekunden umrechnen
+
+        transcription = transcription_raw.ix[gene_id, 1]
+
+        """
+        halflive
+        """
+        halflive_raw = pd.read_excel("fsa_sequences/msb2010112-s2.xls")
+
+        halflive_raw.ix[:,1] = halflive_raw.ix[:,1].divide(60)
+
+        halflive = halflive_raw.ix[gene_id, 1]
+
+        """
+        return
+        """
         gene = {}
         for i in range(len(gene_id)):
-            gene[gene_id[i]] = mol.Gene(gene_id[i], gene_name[i], which_chr[i], gene_seq[i], loc_list[i])
+            gene[gene_id[i]] = mol.Gene(gene_id[i], gene_name[i], which_chr[i], gene_seq[i], loc_list[i], transcription[i], halflive[i])
 
         return gene

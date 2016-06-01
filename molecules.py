@@ -1,5 +1,6 @@
 __author__ = 'max'
 
+import numpy
 
 class BioMolecule:
     """
@@ -199,84 +200,26 @@ class RNAPolymeraseIII(Polymerase):
 
 
 
-
-class Gene(BioMoleculeCount):
-
-    """
-    an object for the gene sequence with the attributes:
-    id -> gene id
-    name -> gene name
-    chr -> which chromosome the gene is on in integer form, 1-15 und 17 = mitochondrial chromosome and 18 = 2-micron plasmid
-    sequence -> sequence of the dna which is transcribed
-    count -> number of copies of the gene
-    sequence_binding -> records if the gene is bound (=1) or currently not bound (=0), important for transcription vs replikation 
-    pol_on_gene -> positions of polymerases on the gene
-
-    possible operations are:
-    gene.mid -> gives the gene name
-    gene.chr -> gives the chromosome on which the gene is on
-    gene.sequence -> gives the sequence of the gene
-    """
-
-    def __init__(self, mid, name, chr, sequence, location, rate, count=0):
-        
-        super().__init__(mid, name, count)
-        self.__location = location
-        self.__chr  = chr
-        self.__sequence = sequence 
-        self.sequence_binding=[0]*len(sequence)
-        self.rnas_transcribed=0 							#number of transcribed RNAs during one transcription-process
-        self.pol_on_gene = []								#nucleotides transcribed by polymerases on the gene
-        self.rate=rate
-						
-        
-    ###### COMMENT for DATA GROUP #######
-    #feel free to replace 'sequence'-information by start-, end-positions and strand (+/-)
-
-    ###### COMMENT FOR REPLICATION_GROUP #######
-    #count: 1 for unreplicated gene, 2 for copied gene 
-
-    @property
-    def chr(self):
-        return self.__chr
-
-    @property
-    def sequence(self):
-        return self.__sequence
-
-    @property
-    def location(self):
-        return self.__location
-
-
-        
-    @sequence.setter
-    def sequence(self, value):
-        if not isinstance(value, str):
-            raise Exception("sequence must be a string")
-            # TODO: check for valid nucleotides here
-        self.__sequence = value.upper()
-
-    
-
-
 class Chromosome:
     """
     An object for the chromosome with the attributes:
+
     id -> gives out the chromosome in integer form 1-16, 17 = mitochondrial chromosome
     fastaname -> is only important for the initiation of the object and used by the function createchromosomes
     sequence -> sequence of the whole chromosome
     revsequence -> the reverse sequence of the whole chromosome
+
     possible operations are:
     gene.id -> gives the chromosome number 1-16, 17 = mitochondrial chromosome
     gene.sequence -> gives the sequence of the chromosome
     gene.revsequence -> gives out the reverse sequence of the chromosome
     """
-    def __init__(self, id ,fastaname):
+    def __init__(self, id,  arf, fastaname):
         self._id=id
         self._fastaname=fastaname
-        self.binding_molecules=[[],[]]	#list with tuples of start and end positions of occupied regions in [0] and the binding molecule in [1]
-
+        self._arf = arf
+        self.binding_molecules=[[],[]]  #list with tuples of start and end positions of occupied regions in [0] and the binding molecule in [1]
+        self.replication_ori_bound = False
         
         #read in the file, delete the headers, concatenate the single lines of the sequence and store them as a single string in sequence
         with open(self._fastaname) as chr_fasta:
@@ -322,11 +265,11 @@ class Chromosome:
     @property
     def sequence(self):
         return self._sequence
-    #@sequence.setter
-    #def sequence(self, value):
-    #    if not isinstance(value, str):
-    #        raise TypeError("Sequence must be a String.")
-    #    self._sequence = value
+
+    @property
+    def arf(self):
+        return self._arf
+    
         
     @property
     def revsequence(self):
@@ -393,3 +336,86 @@ class Chromosome:
     #### method needed which stores a tuple of start&end and bound molecule in the ordered (!!!) list bindnig_molecules
     def bind_to_chrom(start, end):
         pass
+
+
+class Gene:
+    """
+    an object for the gene sequence with the attributes:
+    id -> gene id
+    name -> gene name
+    chr -> which chromosome the gene is on in integer form, 1-15 und 17 = mitochondrial chromosome and 18 = 2-micron plasmid
+    sequence -> sequence of the dna which is transcribed
+    count ->
+    sequence_binding -> records if the gene is bound (=1) or currently not bound (=0), important for transcription vs replikation (i think)
+    transrate -> float of the transkription rate, if none was found a median of all values was used, set to per second
+    halflive -> float of the halflive time, used for decay of the mRNA, if none was found, a median of all values was used set to per second
+
+    possible operations are:
+    gene.mid -> provides the gene name
+    gene.chr -> provides the chromosome on which the gene is on
+    gene.sequence -> provides the sequence of the gene
+    gene.name -> provides the name of the gene
+    gene.translate -> provides the transcription rate
+    gene.halflive -> provides the halflive of the corresponding mRNA
+    """
+
+    def __init__(self, mid, name, chr, sequence, location, transrate, halflive, count=0):
+        
+        self.__mid = mid
+        self.__name = name
+        self.__location = location
+        self.__chr  = chr
+        self.__sequence = sequence
+        self.__transrate = transrate
+        self.__halflive = halflive 
+        self.sequence_binding=[0]*len(sequence)
+        self.rnas_transcribed=0 							#number of transcribed RNAs during one transcription-process
+        self.pol_on_gen = []								#nucleotides transcribed by polymerases on the gene
+						
+        
+        if numpy.isnan(self.__transrate):
+            self.__transrate = 0.00123056
+        if numpy.isnan(self.__halflive):
+            self.__halflive = 0.262
+    ###### COMMENT for DATA GROUP #######
+    #feel free to replace 'sequence'-information by start-, end-positions and strand (+/-)
+
+    ###### COMMENT FOR REPLICATION_GROUP #######
+    #count: 1 for unreplicated gene, 2 for copied gene 
+
+    @property
+    def mid(self):
+        return self.__mid
+
+    @property
+    def chr(self):
+        return self.__chr
+
+    @property
+    def sequence(self):
+        return self.__sequence
+        
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def location(self):
+        return self.__location
+
+    @property
+    def transrate(self):
+        return self.__transrate
+    
+    @property
+    def halflive(self):
+        return self.__halflive
+
+
+        
+    @sequence.setter
+    def sequence(self, value):
+        if not isinstance(value, str):
+            raise Exception("sequence must be a string")
+            # TODO: check for valid nucleotides here
+        self.__sequence = value.upper()

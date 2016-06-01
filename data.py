@@ -18,9 +18,11 @@ class Chromosome:
     gene.sequence -> gives the sequence of the chromosome
     gene.revsequence -> gives out the reverse sequence of the chromosome
     """
-    def __init__(self, id ,fastaname):
+    def __init__(self, id,  arf, fastaname):
         self._id=id
         self._fastaname=fastaname
+        self._arf = arf
+        self.binding_molecules=[[],[]]  #list with tuples of start and end positions of occupied regions in [0] and the binding molecule in [1]
         self.replication_ori_bound = False
         
         #read in the file, delete the headers, concatenate the single lines of the sequence and store them as a single string in sequence
@@ -53,7 +55,6 @@ class Chromosome:
         self.revsequence=self.revsequence+ chromosome.revsequence
         return self
     
-    
     #getter für id, sequence & revsequence
 
     @property
@@ -68,11 +69,11 @@ class Chromosome:
     @property
     def sequence(self):
         return self._sequence
-    #@sequence.setter
-    #def sequence(self, value):
-    #    if not isinstance(value, str):
-    #        raise TypeError("Sequence must be a String.")
-    #    self._sequence = value
+
+    @property
+    def arf(self):
+        return self._arf
+    
         
     @property
     def revsequence(self):
@@ -87,6 +88,58 @@ class Chromosome:
     def fastaname(self):
         return self._fastaname
 
+
+#####this method will check for bound regions in the chromosome######
+
+    def chromosome_bound(self, range):
+
+        if isinstance(range, list):
+            #range[0]: startposition of test, range[1]: endposition of test
+            iter=0
+            bound_stuff=[]
+            bound_found=False
+            for tuples in self.binding_molecules[0]:
+
+                if bound_found==False:
+                    if tuples[0]>range[1] and iter==0:
+                        return None
+                    elif tuples[0]>range[0] and tuples[0]>=range[1]:
+                        return None
+                    elif tuples[1]<range[0] and tuples[1]<range[0]:
+                        pass
+                    elif tuples[0]<=range[0] and tuples[1]>=range[1]:
+                        bound_stuff.append(self.binding_molecules[1][self.binding_molecules[0].index(tuples)])
+                        return bound_stuff
+                    elif tuples[1]<range[1]:
+                        bound_stuff.append(self.binding_molecules[1][self.binding_molecules[0].index(tuples)])
+                        bound_found=True
+                    
+                else:
+                    if tuples[0]>range[1]:
+                        return bound_stuff
+                    elif tuples[1]>range[1]:
+                        bound_stuff.append(self.binding_molecules[1][self.binding_molecules[0].index(tuples)])
+                        return bound_stuff
+                    else:
+                        bound_stuff.append(self.binding_molecules[1][self.binding_molecules[0].index(tuples)])
+                iter+=1
+            return bound_stuff
+
+
+
+        elif isinstance(range, int):
+            for tuples in self.binding_molecules[0]:
+                if tuples[0]<=range and tuples[1]>=range:
+                    return self.binding_molecules[1][self.binding_molecules[0].index(tuples)]
+                elif tuples[0]>range:
+                    break
+           
+        else:
+            print("Argument type not expected (list or int)")
+
+    #### method needed which stores a tuple of start&end and bound molecule in the ordered (!!!) list bindnig_molecules
+    def bind_to_chrom(start, end):
+        pass
 
 class Gene:
     """
@@ -108,35 +161,31 @@ class Gene:
     gene.translate -> provides the transcription rate
     gene.halflive -> provides the halflive of the corresponding mRNA
     """
+
     def __init__(self, mid, name, chr, sequence, location, transrate, halflive, count=0):
         
-        self.__name = name
         self.__mid = mid
+        self.__name = name
         self.__location = location
         self.__chr  = chr
         self.__sequence = sequence
         self.__transrate = transrate
-        self.__halflive = halflive
+        self.__halflive = halflive 
         self.sequence_binding=[0]*len(sequence)
-        self.rnas_transcribed=0 
-        self.pol_on_gen = []
-
-
+        self.rnas_transcribed=0                             #number of transcribed RNAs during one transcription-process
+        self.pol_on_gen = []                                #nucleotides transcribed by polymerases on the gene
+        self.rate=32
+                        
+        
         if numpy.isnan(self.__transrate):
             self.__transrate = 0.00123056
         if numpy.isnan(self.__halflive):
             self.__halflive = 0.262
-
-
     ###### COMMENT for DATA GROUP #######
     #feel free to replace 'sequence'-information by start-, end-positions and strand (+/-)
 
     ###### COMMENT FOR REPLICATION_GROUP #######
     #count: 1 for unreplicated gene, 2 for copied gene 
-
-    #@property
-    #def location(self):
-    #    return self.__location
 
     @property
     def mid(self):
@@ -165,8 +214,9 @@ class Gene:
     @property
     def halflive(self):
         return self.__halflive
-    
-    
+
+
+        
     @sequence.setter
     def sequence(self, value):
         if not isinstance(value, str):
@@ -175,38 +225,47 @@ class Gene:
         self.__sequence = value.upper()
 
 
-
 def createwholegenome(chr_list):
 
     whole_genome = ""
     for i in range(len(chr_list)):
-        whole_genome += chr_list[i].sequence
+        whole_genome += whole_genome + chr_list[i].sequence
 
     return whole_genome
 
 def createchromosomes():
+    """
+    arf = [[]]
+
+    ori_raw = pd.read_excel("fsa_sequences/ORI.xls")
     
-    chr1=Chromosome("Chr 1","fsa_sequences/S288C_Chromosome I.fsa")
-    chr2=Chromosome("Chr 2","fsa_sequences/S288C_Chromosome II.fsa")
-    chr3=Chromosome("Chr 3","fsa_sequences/S288C_Chromosome III.fsa")
-    chr4=Chromosome("Chr 4","fsa_sequences/S288C_Chromosome IV.fsa")
-    chr5=Chromosome("Chr 5","fsa_sequences/S288C_Chromosome V.fsa")
-    chr6=Chromosome("Chr 6","fsa_sequences/S288C_Chromosome VI.fsa")
-    chr7=Chromosome("Chr 7","fsa_sequences/S288C_Chromosome VII.fsa")
-    chr8=Chromosome("Chr 8","fsa_sequences/S288C_Chromosome VIII.fsa")
-    chr9=Chromosome("Chr 9","fsa_sequences/S288C_Chromosome IX.fsa")
-    chr10=Chromosome("Chr 10","fsa_sequences/S288C_Chromosome X.fsa")
-    chr11=Chromosome("Chr 11","fsa_sequences/S288C_Chromosome XI.fsa")
-    chr12=Chromosome("Chr 12","fsa_sequences/S288C_Chromosome XII.fsa")
-    chr13=Chromosome("Chr 13","fsa_sequences/S288C_Chromosome XIII.fsa")
-    chr14=Chromosome("Chr 14","fsa_sequences/S288C_Chromosome XIV.fsa")
-    chr15=Chromosome("Chr 15","fsa_sequences/S288C_Chromosome XV.fsa")
-    chr16=Chromosome("Chr 16","fsa_sequences/S288C_Chromosome XVI.fsa")
-    chrmito=Chromosome("Chr 17","fsa_sequences/S288C_Chromosome Mito.fsa")
+    db_chr1 = ori_raw[ori_raw.ix[:,0]=="chr1"]
+    arf_chr1 = 
+    """
+
+
+    chr1=mol.Chromosome("Chr 1","fsa_sequences/S288C_Chromosome I.fsa")
+    chr2=mol.Chromosome("Chr 2","fsa_sequences/S288C_Chromosome II.fsa")
+    chr3=mol.Chromosome("Chr 3","fsa_sequences/S288C_Chromosome III.fsa")
+    chr4=mol.Chromosome("Chr 4","fsa_sequences/S288C_Chromosome IV.fsa")
+    chr5=mol.Chromosome("Chr 5","fsa_sequences/S288C_Chromosome V.fsa")
+    chr6=mol.Chromosome("Chr 6","fsa_sequences/S288C_Chromosome VI.fsa")
+    chr7=mol.Chromosome("Chr 7","fsa_sequences/S288C_Chromosome VII.fsa")
+    chr8=mol.Chromosome("Chr 8","fsa_sequences/S288C_Chromosome VIII.fsa")
+    chr9=mol.Chromosome("Chr 9","fsa_sequences/S288C_Chromosome IX.fsa")
+    chr10=mol.Chromosome("Chr 10","fsa_sequences/S288C_Chromosome X.fsa")
+    chr11=mol.Chromosome("Chr 11","fsa_sequences/S288C_Chromosome XI.fsa")
+    chr12=mol.Chromosome("Chr 12","fsa_sequences/S288C_Chromosome XII.fsa")
+    chr13=mol.Chromosome("Chr 13","fsa_sequences/S288C_Chromosome XIII.fsa")
+    chr14=mol.Chromosome("Chr 14","fsa_sequences/S288C_Chromosome XIV.fsa")
+    chr15=mol.Chromosome("Chr 15","fsa_sequences/S288C_Chromosome XV.fsa")
+    chr16=mol.Chromosome("Chr 16","fsa_sequences/S288C_Chromosome XVI.fsa")
+    chrmito=mol.Chromosome("Chr 17","fsa_sequences/S288C_Chromosome Mito.fsa")
 
     chr_list=[chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chrmito]
         
     return chr_list
+
 
 def creategenes():
 
@@ -305,7 +364,6 @@ def creategenes():
     """
     gene = {}
     for i in range(len(gene_id)):
-        gene[gene_id[i]] = Gene(gene_id[i], gene_name[i], which_chr[i], gene_seq[i], loc_list[i], transcription[i], halflive[i])
+        gene[gene_id[i]] = mol.Gene(gene_id[i], gene_name[i], which_chr[i], gene_seq[i], loc_list[i], transcription[i], halflive[i])
 
     return gene
-

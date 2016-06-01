@@ -333,8 +333,12 @@ class Chromosome:
             print("Argument type not expected (list or int)")
 
     #### method needed which stores a tuple of start&end and bound molecule in the ordered (!!!) list bindnig_molecules
-    def bind_to_chrom(start, end):
-        pass
+    def bind_to_chrom(tuple, object):
+        for i in range(len(binding_molecules)):
+            if tuple[0] < binding_molecules[0::2][i][0]:
+                binding_molecules.insert(i, tuple)
+                binding_molecules.insert(i+1, object)
+
 
 
 class Gene:
@@ -360,6 +364,7 @@ class Gene:
 
     def __init__(self, mid, name, chr, sequence, location, transrate, halflive, count=0):
         
+        self.__count = count
         self.__mid = mid
         self.__name = name
         self.__location = location

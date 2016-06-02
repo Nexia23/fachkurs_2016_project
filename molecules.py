@@ -107,13 +107,30 @@ class NucleotidPool(BioMolecule):
 class MRNA(Polymer):
     def __init__(self, mid, name, sequence, mass=0):
         super().__init__(mid, name, sequence, mass)
-        self.sequence_triplet_binding = [0] * (len(sequence) // 3)
+        self.__sequence = sequence
+        self.update_binding_array()
+
+    @property
+    def sequence(self):
+        return self.__sequence
+
+    @sequence.setter
+    def sequence(self, value):
+        if not isinstance(value, str):
+            raise Exception("sequence must be a string")
+        self.__sequence = value.upper()
+        self.calculate_mass()
+        self.update_binding_array()
 
     def calculate_mass(self):
         self.mass = 0
         NA_mass = {'A': 1.0, 'U': 2.2, 'G': 2.1, 'C': 1.3}
         for na in self.sequence:
             self.mass += NA_mass[na]
+
+    def update_binding_array(self):
+        self.sequence_triplet_binding = [0] * (len(self.sequence) // 3)
+
 
 
 class Protein(Polymer):

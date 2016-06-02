@@ -57,17 +57,20 @@ class Translation(processes.Process):
         # enzymes_id -> the only one initialized ribosome
        
         self.ribosomes = model.states[list(self.enzyme_ids)[0]] # call in the dictionary states for the Ribsosome-object
-        
-        sub_kopy = list(self.substrate_ids)        #in Liste umschreiben damit Zugriff auf Index moeglich
+
+        mRNA_list = [] # list of current mRNA objects
+        for state in model.states:
+            if isinstance(model.states[state], list): # check whether model.states is a list
+            # if yes --> iterate over all elements and check whether they are mRNA
+                for elem in model.states[state]:
+                    if isinstance (elem, molecules.MRNA):
+                        mRNA_list.append(elem)
         
         for i in range (10):
-            
-                
-            #np.random.shuffle(sub_kopy)         # List wird durch shuffle gemischt
-            for mrna_id in sub_kopy:           # substrate should be a list for ids of all mrnas
-                                                            # initialise prot variable
-                                                # object of mRNA
-                mrna = model.states[mrna_id]
+                          
+            #np.random.shuffle(mRNA_list)         # List wird durch shuffle gemischt
+            for mrna in mRNA_list:           # substrate should be a list for ids of all mrnas
+                                                          
                 # ribosoms work: bind, move, initialise, elongate
                 if mrna.sequence_triplet_binding[0] == 0:  # check if 1st codon is empty
                    
@@ -89,7 +92,6 @@ class Translation(processes.Process):
         
         if np.random.poisson(self.ribosomes.count) > 1:  # check if ribosome can bind
             mrna.sequence_triplet_binding[0] = 'R'          # !Jens! codon wird 'R', Teil des Ribosomes binden an 0. Stelle binden!
-    
 
             if mrna.sequence[0:3]=='AUG':                   # if first codon is START codon -> initiate
                 self.initiate(mrna, 1)
@@ -100,8 +102,8 @@ class Translation(processes.Process):
         """
         move not initiated ribosomes and also other ribosomes
         
-
         """
+
         ribo_pos = [j for j, val in enumerate(mrna.sequence_triplet_binding) if val=='R'] #liste die R-positionen speichert also den index in triplet_binding 
         prot_pos = [j for j, val in enumerate(mrna.sequence_triplet_binding) if isinstance(val, molecules.Protein)] #liste der Protein-Positionen
         
@@ -133,8 +135,6 @@ class Translation(processes.Process):
             return self.elongate( mrna, i)
         return 0
 
-
-
     def initiate(self, mrna, i):
         """
         Initiate translation, create protein object.
@@ -142,7 +142,6 @@ class Translation(processes.Process):
         @type mrna: MRNA
         """
         # !Jens! Da muss jemand kraeftig umbauen
-        
         mrna.sequence_triplet_binding[i] = molecules.Protein("Protein_{}".format(mrna.mid),
                                                              "Protein_{0}".format(mrna.name.split("_")[-1]),
                                                              "",)
@@ -155,10 +154,7 @@ class Translation(processes.Process):
 
         @type return: Protein or False
         """
-        
-        
-        if isinstance(mrna.sequence_triplet_binding[i], molecules.Protein):
-            
+        if isinstance(mrna.sequence_triplet_binding[i], molecules.Protein):  
 
             codon = mrna[i * 3:i * 3 + 3]
             aa = self.code[codon]
@@ -184,10 +180,7 @@ class Translation(processes.Process):
         self.entkoppeln(mrna,i)
         self.ribosomes.count += 1
         # put proteins in lists (state)
-        return protein
-        
-        
-    
+        return protein  
 
     def entkoppeln(self, mrna, i):      
         if i < 10:
@@ -203,16 +196,12 @@ class Translation(processes.Process):
                 mrna.sequence_triplet_binding[i-k] = 0
                 k+=1
 
-
     def occupy(self, mrna, i): 
         """
         Movement of Ribosome OR Protein to next codon. 
         !!! Moves from position i-1 to position i TODO:Compatibility to elongate (i-1 --> i)
         Occupies the last 9 codons and frees up the 10th (backwards)
         """
-
-           #Funktion die Besetzung einrichtet
-       
        
         if isinstance(mrna.sequence_triplet_binding[i-1], molecules.Protein):
             mrna.sequence_triplet_binding[i] = mrna.sequence_triplet_binding[i-1]
@@ -225,8 +214,4 @@ class Translation(processes.Process):
             mrna.sequence_triplet_binding[i-10] = 0        # Stelle die frei wird
             for k in range(9):
                 mrna.sequence_triplet_binding[i-(k+1)] = 1     # R gefolgt von 9 Einsen(ribosom) 
-        #print(mrna.sequence_triplet_binding)
-        
-        #if isinstance(mrna.sequence_triplet_binding[i], molecules.Protein):
-            #print(mrna.sequence_triplet_binding[i].sequence)
         

@@ -214,10 +214,11 @@ class Chromosome:
     gene.sequence -> gives the sequence of the chromosome
     gene.revsequence -> gives out the reverse sequence of the chromosome
     """
-    def __init__(self, id,  arf, fastaname):
-        self._id=id
+    def __init__(self, mid, name,  arf, fastaname):
+        self._mid=mid
         self._fastaname=fastaname
         self._arf = arf
+        self._name = name
         self.binding_molecules=[[],[]]  #list with tuples of start and end positions of occupied regions in [0] and the binding molecule in [1]
         self.replication_ori_bound = False
         
@@ -254,13 +255,13 @@ class Chromosome:
     #getter für id, sequence & revsequence
 
     @property
-    def id(self):
-        return self._id
-    @id.setter
-    def id(self, value):
+    def mid(self):
+        return self._mid
+    @mid.setter
+    def mid(self, value):
         if not isinstance(value, int):
-            raise TypeError("ID must be an Integer.")
-        self._id = value
+            raise TypeError("MID must be an Integer.")
+        self._mid = value
         
     @property
     def sequence(self):
@@ -269,6 +270,9 @@ class Chromosome:
     @property
     def arf(self):
         return self._arf
+    @property
+    def name(self):
+        return self._name
     
         
     @property

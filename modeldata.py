@@ -1,6 +1,5 @@
 import random as rnd
 import string
-
 import translation
 import molecules as mol
 import re

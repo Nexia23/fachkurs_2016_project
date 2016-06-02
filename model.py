@@ -104,7 +104,6 @@ class Model:
 
         """
         for p in self.processes:
-            print(p)
             self.processes[p].update(self)
 
         for state in self.states:

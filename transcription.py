@@ -63,24 +63,57 @@ class Transcription(processes.Process):
 	#def update(self, genedic, rna_pool):
 
 		genedic=model.genes
-		rna_pool=model.mrnas
+		#rna_pool=model.mrnas
 		self.mypolymerase=self.enzyme_ids
 		self.my_nucleotides=model.nucleotides
 
 		#number still needed: empirically! 
-		update_per_s=2000
+		update_per_s=100
 
 		gene_id, weights=self.make_weights(genedic)
 
 		for steps in range(update_per_s):
 			#rna = self.onestep(genedic)
-			rna=self.onestep(genedic, weights, gene_id)
-			if isinstance(rna, molecules.MRNA):
-				#rna_pool.append(rna)
-				if rna.name in model.states:
-					model.mrnas[rna.name].append(rna)
-				else:
-					model.mrnas[rna.name] = [rna]
+
+			#print('New step: \n')	
+
+			bound_gene=False
+
+			#elongation
+			for g in gene_id:
+				g=genedic[g]
+				for i in g.pol_on_gene[0]:
+					if random.randint(1,9)<9:
+						#print('elongate!')
+						rna = self.elongation(g, model.chromosomes, i)
+						bound_gene=True
+
+						if isinstance(rna, molecules.MRNA):
+					#rna_pool.append(rna)
+							if rna.name in model.states:
+								model.states[rna.name].append(rna)
+							else:
+								model.states[rna.name] = [rna]
+
+			transc_gene=self.select_gene(genedic)
+			while len(transc_gene.location) >1:
+				transc_gene=self.select_gene(genedic)
+
+			if bound_gene==False: 
+				print("First initialize")
+				print (transc_gene.name)
+				self.intialization(transc_gene, model.chromosomes, weights, gene_id)
+
+
+
+			new_pol = self.rand_distr(transc_gene, gene_id, weights) 
+			#initializations
+			if new_pol==1 and self.mypolymerase.count>0:
+				print("Further initialize")
+				self.intialization(transc_gene, model.chromosomes, weights, gene_id)
+
+			#print('Step ended \n')
+				
 
     	####visualization of selected genes ######
 		#plt.plot(range(len(self.allgenes[0])),self.allgenes[1])
@@ -90,12 +123,34 @@ class Transcription(processes.Process):
 
 		#return rna_pool
 
+	def elongation(self, transc_gene, all_chromosomes, pos):
+
+		if transc_gene.location[0][0]< transc_gene.location[0][1]:
+			strand='+'
+		else:
+			strand='-'
+
+			#get chromosome-position: on which chromosome are we? 
+		for chr in all_chromosomes:
+			if transc_gene.chr==chr.mid:
+				mychr=chr
+
+		pol_position=pos
+		mrna = self.transcribe(transc_gene, pol_position, mychr, strand)
+		if isinstance(mrna, molecules.MRNA):
+			return mrna
 
 			
 	#def onestep(self,genedic):			#expect a dictionary of genes 
-	def onestep(self, genedic, weights, gene_ids):
+	def intialization(self, transc_gene, all_chromosomes, weights, gene_ids):
+		chr_found=False
 
-		transc_gene=self.select_gene(genedic)
+		for chr in all_chromosomes:
+			if transc_gene.chr==chr.mid:
+				mychr=chr
+				break
+		
+			
 
 		#testprints
 		#print(transc_gene.name)
@@ -109,28 +164,29 @@ class Transcription(processes.Process):
 		#	self.allgenes[0].append(transc_gene.name)
 		#	self.allgenes[1].append(1)
 		#########################################################
+		#try:
+		if mychr.chromosome_bound((int(transc_gene.location[0][0])-self.polymerase_size,int(transc_gene.location[0][0])+self.polymerase_size)) is None and self.mypolymerase.count>0:
+			#print('Initiate!')
+			mychr.bind_to_chrom( (int(transc_gene.location[0][0])-self.polymerase_size,int(transc_gene.location[0][0])+self.polymerase_size), self.mypolymerase)
+			""" for one Polymerase: look for a gene to transcribe. when ORF is found: initiate """
 
-		if not transc_gene.pol_on_gene:
-			if transc_gene.sequence_binding[0]==0 and self.mypolymerase.count>0:
-				self.initiate(transc_gene)
-		else:
-			new_pol = self.rand_distr(transc_gene, gene_ids, weights) 
-			#function that will compare the probability of ocurrence of the transcription rate of the gene with a random number
+				#### from the data group: we expect an self.genes-dictionary in model.py containing all genes
 
-			#if transc_gene.sequence_binding[self.polymerase_size-1]==0 and self.mypolymerase.count>0 and random.randint(1,200)==1:
-			if transc_gene.sequence_binding[self.polymerase_size-1]==0 and self.mypolymerase.count>0 and new_pol == 1:
+		
+			if isinstance(self.mypolymerase, molecules.RNAPolymeraseII): 
+				transc_gene.pol_on_gene[0].append(int(transc_gene.location[0][0]))
+				transc_gene.pol_on_gene[1].append(molecules.MRNA("mRNA_{}".format(transc_gene.mid), "mRNA_{0}".format(transc_gene.name), '',))
+			
+			
+			self.mypolymerase.count+=-1
+	
+		#except UnboundLocalError:
+		#	pass
 
-				#check whether the whole region the polymerase will occupy is free
-				self.initiate(transc_gene)
-			else:
-				pol_position=random.choice(transc_gene.pol_on_gene)
-				mrna = self.transcribe(transc_gene, pol_position)
-				if isinstance(mrna, molecules.MRNA):
-					#if mrna.name in model.states:
-					#	model.states[mrna.name].append(mrna)
-					#else:
-					#	model.states[mrna.name] = [mrna]
-					return mrna
+
+
+
+				
 
 	def make_weights(self, genedic):
 		transc_rate=[]
@@ -174,86 +230,79 @@ class Transcription(processes.Process):
 		return transc_gene
 
 
-	def initiate(self,gene):
+	#def initiate(self,gene):
+#moved to initialization!!!!!!
 
-		""" for one Polymerase: look for a gene to transcribe. when ORF is found: initiate """
-
-		#### from the data group: we expect an self.genes-dictionary in model.py containing all genes
-
-		#print(gene.sequence_binding)
-		if isinstance(self.mypolymerase, molecules.RNAPolymeraseII): 
-			gene.pol_on_gene.append(0)
-			mrna=molecules.MRNA("mRNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
-
-		#if isinstance(self.mypolymerase, molecules.RNAPolymeraseI):
-			#gene.pol_on_gene[0].append(0)
-			#rna=molecules.RNA("RNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
-
-		#if isinstance(self.mypolymerase, molecules.RNAPolymeraseIII):
-			#gene.pol_on_gene[0].append(0)
-			#rna=molecules.RNA("RNA_{}".format(gene.mid), "mRNA_{0}".format(gene.name.split("_")[-1]), '',)
-
-		
-		#bigger polymerase: has size of polymerase_size in both directions
-		if self.polymerase_size>len(gene.sequence_binding):
-			for i in range(len(gene.sequence_binding)):
-				gene.sequence_binding[i]=mrna
-		else:
-			for i in range(self.polymerase_size):
-				gene.sequence_binding[i]=mrna		
-			
-		self.mypolymerase.count+=-1
-
-
-	def transcribe(self, gene, position):
+	def transcribe(self, gene, pos, mychr, strand):
 
 		""" elongate mRNA for given ORF for only one step. if ORF ends: call terminate-function """
-		pos=position
-		index=gene.pol_on_gene.index(pos)
 
-		mrna=gene.sequence_binding[pos]
+		for i in range(20):
+	
+			index=gene.pol_on_gene[0].index(pos)
 
-		#appending the correct codon from the coding strand
-		nuc=gene.sequence[pos]
-		if nuc=='T':
-			mrna.sequence+='U'
-			self.my_nucleotides.count_nuc['U']+=-1
-		else:
-			mrna.sequence+=nuc
-			self.my_nucleotides.count_nuc[nuc]+=-1
+			mrna=gene.pol_on_gene[1][index]
 
-		#if we are not on the end of the ORF-string
-		if pos+1<len(gene.sequence_binding):
-			#!!!gene.pol_num +=1
+			#appending the correct codon from the coding strand
+			if strand=='+':
+				nuc=gene.sequence[pos-int(gene.location[0][0])]
+			else:
+				nuc=gene.sequence[pos+int(gene.location[0][0])]
 
-			#if coding region is ending: no macromolecule is thought to disturb the elongation process
-			if pos+self.polymerase_size>=len(gene.sequence_binding):
-				gene.pol_on_gene[index]+=1
-				if pos >= self.polymerase_size:
-					gene.sequence_binding[pos-self.polymerase_size]=0
-				return 0
+			if nuc=='T':
+				mrna.sequence+='U'
+				self.my_nucleotides.count_nuc['U']+=-1
+			else:
+				mrna.sequence+=nuc
+				self.my_nucleotides.count_nuc[nuc]+=-1
 
-			#if position space in front of polymerase is empty
-			elif gene.sequence_binding[pos+self.polymerase_size]==0:
-				gene.pol_on_gene[index]+=1
-				gene.sequence_binding[pos+self.polymerase_size]=mrna
-				if pos >= self.polymerase_size:
-					gene.sequence_binding[pos-self.polymerase_size]=0
-				return 0
 
-		else:
-			return self.terminate(gene, position)
-		
+
+
+			#polymerase moves forward! in which direction to move? (strand-dependend)
+			if strand=='+':
+
+			#if we are not on the end of the ORF-string
+				if pos+1<int(gene.location[0][1]):
+
+					if mychr.chromosome_bound(pos+self.polymerase_size+1) is None:
+						mychr.del_on_chrom((pos-self.polymerase_size, pos+self.polymerase_size))
+						mychr.bind_to_chrom((pos-self.polymerase_size+1, pos+self.polymerase_size+1), self.mypolymerase)
+						gene.pol_on_gene[0][index]+=1
+						pos+=1
+						return 0
+
+				else:
+					mychr.del_on_chrom((pos-self.polymerase_size, pos+self.polymerase_size))
+					return self.terminate(gene, pos)
+
+			else:
+
+				if pos-1>int(gene.location[0][1]):
+
+					if mychr.chromosome_bound(pos+self.polymerase_size-1) is None:
+						mychr.del_on_chrom((pos-self.polymerase_size, pos+self.polymerase_size))
+						mychr.bind_to_chrom((pos-self.polymerase_size-1, pos+self.polymerase_size-1), self.mypolymerase)
+						gene.pol_on_gene[0][index]-=1
+						pos -=1
+						return 0
+
+				else:
+					mychr.del_on_chrom((pos-self.polymerase_size, pos+self.polymerase_size))
+					return self.terminate(gene, pos)
+			
+
 
 
 	def terminate(self, gene, position):
 		""" separate mRNA-DNA-Polymerase-complex. release and store new mRNA """
-		
+		#print(gene.pol_on_gene)
 		self.mypolymerase.count+=1
-		rna = gene.sequence_binding[position]
-		for p in range(self.polymerase_size+1):
-			gene.sequence_binding[position-p]=0
-		del gene.pol_on_gene[gene.pol_on_gene.index(position)]
+		rna = gene.pol_on_gene[1][gene.pol_on_gene[0].index(position)]
+		
+		del gene.pol_on_gene[1][gene.pol_on_gene[0].index(position)]
+		del gene.pol_on_gene[0][gene.pol_on_gene[0].index(position)]
+		
 
 		print('terminate!')
 
@@ -261,7 +310,7 @@ class Transcription(processes.Process):
 
 
 	def rand_distr(self, gene, gene_ids, weights): #if gene_ids and weight are global we don't need to send them in the function 
-		ran=random.uniform(0,5)
+		ran=random.uniform(0,1)
 		index_id = gene_ids.index(gene.mid)
 		if weights[index_id]>= ran:
 			return 1

@@ -88,15 +88,26 @@ class Model:
 
 
     def __initialize_processes(self):
-        trsc = transcription.Transcription(1, 'Transcription')
-
+        """
+        initialize processes
+        """
+        
+        # transcription
+        trsc = transcription.Transcription(0, 'Transcription')
         trsc.set_states(self.genes.keys(), self.polymerase2)
         self.processes["Transkription"] = trsc
 
-
+        # translation
         trsl = translation.Translation(1, "Translation")
         trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
         self.processes["Translation"] = trsl
+
+        # replication
+        repl =rep.Replication(2, "Replication")
+        replication_enzyme_ids= list(self.helicases.keys()).extend(list(self.polymerases.keys()))
+        repl.set_states(list(self.chromosomes.keys()), replication_enzyme_ids)
+        self.processes.update({"Replication":repl})
+
 
     def step(self):
         """

@@ -125,9 +125,5 @@ class Model:
 
 if __name__ == "__main__":
     c = Model()
-    for g in list(c.genes.keys())[0:100]:
-        print(c.genes[g].transrate)
     c.simulate(1, log=True)
-    for g in list(c.genes.keys()):
-    	if c.genes[g].pol_on_gene:
-    		print(c.genes[g].pol_on_gene)
+    

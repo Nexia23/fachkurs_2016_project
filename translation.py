@@ -57,14 +57,17 @@ class Translation(processes.Process):
         # enzymes_id -> the only one initialized ribosome
        
         self.ribosomes = model.states[list(self.enzyme_ids)[0]] # call in the dictionary states for the Ribsosome-object
-        
-        sub_kopy = list(self.substrate_ids)        #in Liste umschreiben damit Zugriff auf Index moeglich
+
+        mRNA_ids = []
+        for state in model.states:
+            if isinstance(model.states[state], molecules.MRNA):
+                mRNA_ids.append(state)
         
         for i in range (10):
             
                 
-            #np.random.shuffle(sub_kopy)         # List wird durch shuffle gemischt
-            for mrna_id in sub_kopy:           # substrate should be a list for ids of all mrnas
+            #np.random.shuffle(mRNA_ids)         # List wird durch shuffle gemischt
+            for mrna_id in mRNA_ids:           # substrate should be a list for ids of all mrnas
                                                             # initialise prot variable
                                                 # object of mRNA
                 mrna = model.states[mrna_id]

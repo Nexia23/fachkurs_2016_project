@@ -53,8 +53,8 @@ class Model:
         self.ribosomes = {} #dictionary will be filled with 10 Ribosomes
         self.volume = 1
         self.db = modeldata.ModelData()
-        self.chromosomes=modeldata.ModelData.createchromosomes()	#list with chromosomes
-        self.genes=modeldata.ModelData.creategenes()				#dictionary with genes
+        self.chromosomes=modeldata.ModelData.createchromosomes()    #list with chromosomes
+        self.genes=modeldata.ModelData.creategenes()                #dictionary with genes
 
         # ribosomes
         self.__initialize_macromolecules()
@@ -88,15 +88,15 @@ class Model:
         self.states.update(self.mrnas)
 
     def __initialize_processes(self):
-    	trsc = transcription.Transcription(1, 'Transcription')
+        trsc = transcription.Transcription(1, 'Transcription')
 
-    	trsc.set_states(self.genes.keys(), self.polymerase2)
-    	self.processes = {"Transkription": trsc}
+        trsc.set_states(self.genes.keys(), self.polymerase2)
+        self.processes = {"Transkription": trsc}
 
 
-        #trsl = translation.Translation(1, "Translation")
-        #trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
-        #self.processes = {"Translation": trsl}
+        trsl = translation.Translation(1, "Translation")
+        trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
+        self.processes = {"Translation": trsl}
 
     def step(self):
         """
@@ -125,5 +125,5 @@ class Model:
 
 if __name__ == "__main__":
     c = Model()
-    c.simulate(1, log=True)
+    c.simulate(5, log=True)
     

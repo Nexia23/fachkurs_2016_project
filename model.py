@@ -60,19 +60,10 @@ class Model:
         self.chromosomes=modeldata.ModelData.createchromosomes()    #list with chromosomes
         self.genes=modeldata.ModelData.creategenes()                #dictionary with genes
 
-        # ribosomes
-        
-        # mRNAs
-        self.__initialize_mRNA()
-
         self.__initialize_macromolecules()
-        # mRNAs
-       # self.__initialize_mRNA()
-
         self.__initialize_states()
         self.__initialize_processes()
         self.results = Output(self)  
-
 
 
     def __initialize_macromolecules(self):
@@ -84,20 +75,17 @@ class Model:
         self.chromosomes = {x.id:x for x in modeldata.ModelData.createchromosomes()}
 
 
-    def __initialize_mRNA(self):
-        pass
-
     def __initialize_states(self):
         """
         initialize the different states
         """
-
         self.states.update(self.ribosomes)  #adding dictionaries to self.states
         self.states.update(self.helicases)
         self.states.update(self.polymerases)
         self.states.update(self.chromosomes)
         self.states.update(self.mrnas)
         self.states["Nucleotides"] = self.nucleotides
+
 
     def __initialize_processes(self):
         trsc = transcription.Transcription(1, 'Transcription')
@@ -126,12 +114,11 @@ class Model:
     def simulate(self, steps, log=True):
         """
         Simulate the model for some time.
-
         """
         for s in range(steps):
             self.step()
             if log:  # This could be an entry point for further logging
-                #print count of each protein to the screen
+                #print all states
                 print('\r{}'.format([self.states[x] for x in self.states.keys() ], end=''))
 
 

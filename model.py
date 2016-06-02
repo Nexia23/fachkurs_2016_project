@@ -1,6 +1,7 @@
 import modeldata
 import molecules as mol
 import translation
+import replication as rep
 import transcription
 
 class Output:
@@ -51,12 +52,19 @@ class Model:
         self.timestep = 0
         self.mrnas = {}  # all selfs should be initialized in the constructor
         self.ribosomes = {} #dictionary will be filled with 10 Ribosomes
+        self.helicases = {}
+        self.polymerases = {}
+        self.chromosomes = {}
         self.volume = 1
         self.db = modeldata.ModelData()
         self.chromosomes=modeldata.ModelData.createchromosomes()    #list with chromosomes
         self.genes=modeldata.ModelData.creategenes()                #dictionary with genes
 
         # ribosomes
+        
+        # mRNAs
+        self.__initialize_mRNA()
+
         self.__initialize_macromolecules()
         # mRNAs
        # self.__initialize_mRNA()
@@ -71,13 +79,13 @@ class Model:
         self.ribosomes = {'Ribosomes': mol.Ribosome('Ribos', 'Ribosomes', 10)}
         self.polymerase2= mol.RNAPolymeraseII('Pol2', 'Polymerase2', 100000000)
         self.nucleotides= mol.NucleotidPool('Nucs','Nucleotides', 100000)
+        self.helicases = {'DnaB': rep.Helicase("Helicase", "DnaB", 100)}
+        self.polymerases = {'Polymerase3' :rep.Polymerase("Polymerase", "Polymerase3", 100)}
+        self.chromosomes = {x.id:x for x in md.ModelData.createchromosomes()}
 
-   # def __initialize_mRNA(self):
-        # I think to have a function for each molecule state generation is more intuitive and less error prone
-     #   for i, mrna in enumerate(self.db.get_states(mol.MRNA)):
-     #       mid, name, sequence = mrna
-     #       self.mrnas[mid] = mol.MRNA(mid, name, sequence)
-     #       #dict_mrnas[key] = newmRNA
+
+    def __initialize_mRNA(self):
+        pass
 
     def __initialize_states(self):
         """
@@ -85,7 +93,11 @@ class Model:
         """
 
         self.states.update(self.ribosomes)  #adding dictionaries to self.states
+        self.states.update(self.helicases)
+        self.states.update(self.polymerases)
+        self.states.update(self.chromosomes)
         self.states.update(self.mrnas)
+        self.states["Nucleotides"] = self.nucleotides
 
     def __initialize_processes(self):
         trsc = transcription.Transcription(1, 'Transcription')

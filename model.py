@@ -1,7 +1,8 @@
-import modeldata
+import modeldata as md
 import molecules as mol
 import translation
 import replication as rep
+import transcription
 
 
 class Output:
@@ -12,7 +13,7 @@ class Output:
     def __init__(self, model):
         self.meta = {}
         self.model = model
-        self.timecourses = {state: SimulationResult(model.states[state]) for state in model.states}
+        #self.timecourses = {state: SimulationResult(model.states[state]) for state in model.states}
 
     def add_timepoint(self, species):
         """
@@ -32,7 +33,7 @@ class SimulationResult:
     """
 
     def __init__(self, species):
-        self.name = species.name
+        self.id = species.id    # von self.name = specie.name auf .id geändert
         self.value = []
         self.time = []
 
@@ -56,45 +57,33 @@ class Model:
         self.polymerases = {}
         self.chromosomes = {}
         self.volume = 1
-        self.db = modeldata.ModelData()
+        self.db = md.ModelData() 
+        self.genes=md.ModelData.creategenes()                #dictionary with genes
 
         # ribosomes
-        self.__initialize_ribosomes()
-        self._init_helicase()
-        self._init_polymerase()
+        
         # mRNAs
         self.__initialize_mRNA()
-        self.__initialize_chromosomes()
+
+        self.__initialize_macromolecules()
+        # mRNAs
+       # self.__initialize_mRNA()
 
         self.__initialize_states()
         self.__initialize_processes()
-        self.results = Output(self)  #
+        #self.results = Output(self)  
 
-    def _init_helicase(self):
-        self.helicases = {'DnaB': rep.Helicase("Helicase", "DnaB", 1)}
-        
-    def _init_polymerase(self):
-        self.polymerases = {'Polymerase3' :rep.Polymerase("Polymerase", "Polymerase3", 1)}
-
-    def __initialize_ribosomes(self):
+    def __initialize_macromolecules(self):
         self.ribosomes = {'Ribosomes': mol.Ribosome('Ribos', 'Ribosomes', 10)}
+        self.polymerase2= mol.RNAPolymeraseII('Pol2', 'Polymerase2', 100000000)
+        self.nucleotides= mol.NucleotidPool('Nucs','Nucleotides', 100000)
+        self.helicases = {'DnaB': rep.Helicase("Helicase", "DnaB", 1)}
+        self.polymerases = {'Polymerase3' :rep.Polymerase("Polymerase", "Polymerase3", 1)}
+        self.chromosomes = {x.id:x for x in md.ModelData.createchromosomes()}
 
-    def __initialize_chromosomes(self):
-        self.chromosomes = {'chrom1': rep.Chromosome("chrom1", ['A','G','C','T','T','G','A','C','T','A','A','G','C','T','T',
-                                                                 'G','A','C','T','A','A','G','C','T','T','G','A','C','T','A',
-                                                                 'A','G','C','T','T','G','A','C','T','A','A','G','C','T','T',
-                                                                 'G','A','C','T','A','A','G','C','T','T','G','A','C','T','A',
-                                                                 'A','G','C','T','T','G','A','C','T','A','A','G','C','T','T',
-                                                                 'G','A','C','T','A','A','G','C','T','T','G','A','C','T','A',
-                                                                 'A','G','C','T','T','G','A','C','T','A','A','G','C','T','T',
-                                                                 'G','A','C','T','A']) }
 
     def __initialize_mRNA(self):
-        # I think to have a function for each molecule state generation is more intuitive and less error prone
-        for i, mrna in enumerate(self.db.get_states(mol.MRNA)):
-            mid, name, sequence = mrna
-            self.mrnas[mid] = mol.MRNA(mid, name, sequence)
-            #dict_mrnas[key] = newmRNA
+        pass
 
     def __initialize_states(self):
         """
@@ -106,11 +95,18 @@ class Model:
         self.states.update(self.polymerases)
         self.states.update(self.chromosomes)
         self.states.update(self.mrnas)
+        self.states["Nucleotides"] = self.nucleotides
 
     def __initialize_processes(self):
-        trsl = translation.Translation(1, "Translation")
-        trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
-        self.processes = {"Translation": trsl}
+        #trsc = transcription.Transcription(1, 'Transcription')
+
+        #trsc.set_states(self.genes.keys(), self.polymerase2)
+        #self.processes = {"Transkription": trsc}
+
+
+        #trsl = translation.Translation(1, "Translation")
+        #trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
+        #self.processes = {"Translation": trsl}
 
         repl =rep.Replication(2, "Replication")
         replication_enzyme_ids= list(self.helicases.keys()).extend(list(self.polymerases.keys()))
@@ -127,8 +123,8 @@ class Model:
         for p in self.processes:
             self.processes[p].update(self)
 
-        for state in self.states:
-            self.results.add_timepoint(state)
+        #for state in self.states:
+            #self.results.add_timepoint(state)
 
         self.timestep += 1
 
@@ -139,9 +135,9 @@ class Model:
         """
         for s in range(steps):
             self.step()
-            if log:  # This could be an entry point for further logging
+           # if log:  # This could be an entry point for further logging
                 # print count of each protein to the screen
-                print('\r{}'.format([len(self.states[x]) for x in self.states.keys() if "Protein" in x]), end='')
+               # print('\r{}'.format([len(self.states[x]) for x in self.states.keys() if "Protein" in x], end=''))
 
 
 if __name__ == "__main__":

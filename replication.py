@@ -1,6 +1,7 @@
 from molecules import BioMoleculeCount
-from molecules import BioMolecule
+from molecules import BioMolecule, NucleotidPool
 from processes import Process
+import random 
 
 # generell:
 # start replication?
@@ -38,7 +39,7 @@ class Polymerase(BioMoleculeCount):
 
     def __str__(self):
         return 'polymerase: {0}'.format(self.count, self.name)
-  
+
 
 class Replication(Process):
     def __init__(self, id, name):
@@ -66,6 +67,7 @@ class Replication(Process):
         self.polymerase =  model.states['Polymerase3']
         self.helicase = model.states['DnaB']
         self.old_chromosomes = [model.states[chromsome_name] for chromsome_name in self.chromosome_names]
+        self.nucleotids = model.states['Nucleotides']
 
 
         for i, old_chromosome in enumerate(self.old_chromosomes): # wenn das aufgerufene Chromosom folgende Bedingungen erfüllt wird es zur entprechenden Phase weitergeleitet
@@ -74,14 +76,15 @@ class Replication(Process):
                 self.initiate(old_chromosome) 
             elif old_chromosome.replication_ori_bound: #and not transcription an der Stelle:
                 self.elongate(old_chromosome)
-            elif (self.polymerase.count == 0 or self.helicase.count == 0) and not old_chromosome.replication_ori_bound and not self.duplication[chrom.name]:
+            elif (self.polymerase.count == 0 or self.helicase.count == 0) and \
+             not old_chromosome.replication_ori_bound and not self.duplication[old_chromosome.id]:
                 continue
             else:
                 raise NotImplementedError
         print(self.helicase.count)
         print(self.polymerase.count)
-        print(self.chromosomes['chrom1'].sequence)
-        print(len(self.chromosomes['chrom1'].sequence))
+        #print(self.chromosome_names)
+        #print(len(self.chromosome_names))
     
     def initiate(self, chrom: Chromosome):
         print('initiation')
@@ -90,14 +93,14 @@ class Replication(Process):
         	#wird ein neues Chromosom erstellt, ist noch leer
             #Listenform für Sequenz?
             # Chromosom wird aufgerufen, ein neues mit gleichem Namen aber noch leerer Sequenz wird erstellt:
-        self.chromosomes[chrom.name]=Chromosome(chrom.name,[])# legt das dict 'Chromosomes' an, Name bleibt erhalten, Sequenz ändert sich
+        self.chromosomes[chrom.id]=Chromosome(chrom.id,[])# legt das dict 'Chromosomes' an, Name bleibt erhalten, Sequenz ändert sich
                 # wenn die sequenz repliziert wird haben wir einen Gegenstrang, müsste der Formhalber nicht wieder davon der Gegenstrang genommen werden, 
                 # damit wir eine konsistente Speicherung der Stänge haben?
         self.polymerase.count -= 1 #jew count -1 für jedes gebundene molekül
         self.helicase.count -= 1
         chrom.replication_ori_bound = True #setzt das Chromosom auf "gebunden"
         #> damit geht es im nächsten timestep einfach direkt bei der Elongation weiter
-        self.duplication[chrom.name] = False # Chromosom ist noch nicht dupliziert
+        self.duplication[chrom.id] = False # Chromosom ist noch nicht dupliziert
   
     def elongate(self, old_chrom: Chromosome):
         print('elongation')
@@ -107,7 +110,9 @@ class Replication(Process):
         
     
         #definition i?
-        new_chrom = self.chromosomes[old_chrom.name]
+        new_chrom = self.chromosomes[old_chrom.id]
+        prob=[]
+        
         #import von initiation als old_chrom, hier wird das New_chrom erstellt >neue sequenz
         
         # replikation erfolgt mit 100 bp/s also in jedem timestep werden nur 100 nukleotide der Sequnenz gelesen und repliziert, 
@@ -125,41 +130,52 @@ class Replication(Process):
             sequence_to_replicate = old_chrom.sequence[len(new_chrom.sequence) + 1:]
          # transcription berücksichtigen
 
-         # hier kommt noch die Mutation hin: (bisher nur reiner Komplementärstrang)     
+         # Nukleotidcount mol.NucleotidPool
       
 
-        for x in sequence_to_replicate:
-            if x == 'A':
-                    #soll die Sequence von new_chrom befüllen
-                new_chrom.sequence.append('T')      #>>>???
-            if x == 'T':
-                new_chrom.sequence.append('A')
-            if x == 'G':
-                new_chrom.sequence.append('C')
-            if x == 'C':
-                new_chrom.sequence.append('G')
+        for i in range(len(sequence_to_replicate)):
+            x = random.randint(0,100)
+            #dictionary
+            nucleotids = {'A':'T','T':'A','G':'C','C':'G'}
+            transition = {'A':'C','T':'G','G':'T','C':'A'}
+            transversion = {'A':'A','T':'T','G':'G','C':'C'}
+
+        if x == 0:                             #transversion p=0.01
+            new_chrom.sequence.append(transversion[sequence_to_replicate[i]])     
+            prob.append(x)
+            #mol.Nukleotidcount[sequence_to_replicate[i]] -=1
+            #mol.Nukleotidcount(transversion[sequence_to_replicate[i]]) -=1
+
+        elif x == 1:                            #transition p=0.01
+            new_chrom.sequence.append(transition[sequence_to_replicate[i]])
+            prob.append(x)
+            #mol.Nukleotidcount(sequence_to_replicate[i]) -=1
+            #mol.Nukleotidcount(transition[sequence_to_replicate[i]]) -=1
+        else:                                    #complementary strand p=0.98
+            new_chrom.sequence.append(nucleotids[sequence_to_replicate[i]])   
+            prob.append(x)
+            self.nucleotids.count_nuc[sequence_to_replicate[i]] -=1
+            #mol.Nukleotidcount(nucleotids[sequence_to_replicate[i]]) -=1
+
+        print(self.nucleotids.count_nuc)
 
         
-    def terminate(self, chrom, i):
-
-            #wenn die Länge der neuen Sequence der länge der alten entspricht:    
+    def terminate(self, chrom, i):   
         
         self.polymerase += 1
         self.helicase += 1
-        self.duplication[chrom.name] = True# Eintrag als dupliziertes Chromosom
-        chrom.replication_ori_bound = False# wieder ungebunden 
+        self.duplication[chrom.id] = True
+        chrom.replication_ori_bound = False
 
         return new_chrom
-         #! jedes Chromosom sollte nur einmal dupliziert werden!
+       
 
-
-        pass
 
 if __name__ == '__main__':
     rep = Replication('replication', 'replication')
     print(rep.helicase)
     print (rep.polymerase)
-    chrom1 = Chromosome('chrom1', ['A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A''A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A'])
+    #chrom1 = Chromosome('chrom1', ['A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A''A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A'])
     #chrom1 = chr_list[0]
     #chrom2 = chr_list[1]
     print (len(chrom1.sequence))

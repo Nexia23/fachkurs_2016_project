@@ -72,8 +72,8 @@ class Replication(Process):
             else:
                 raise NotImplementedError
 
-        print(self.helicase.count)
-        print(self.polymerase.count)
+        #print(self.helicase.count)
+        #print(self.polymerase.count)
         #print(self.chromosome_names)
         #print(len(self.chromosome_names))
     

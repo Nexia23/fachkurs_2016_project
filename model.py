@@ -77,8 +77,8 @@ class Model:
         self.ribosomes = {'Ribosomes': mol.Ribosome('Ribos', 'Ribosomes', 10)}
         self.polymerase2= mol.RNAPolymeraseII('Pol2', 'Polymerase2', 100000000)
         self.nucleotides= mol.NucleotidPool('Nucs','Nucleotides', 100000)
-        self.helicases = {'DnaB': rep.Helicase("Helicase", "DnaB", 1)}
-        self.polymerases = {'Polymerase3' :rep.Polymerase("Polymerase", "Polymerase3", 1)}
+        self.helicases = {'DnaB': rep.Helicase("Helicase", "DnaB", 100)}
+        self.polymerases = {'Polymerase3' :rep.Polymerase("Polymerase", "Polymerase3", 100)}
         self.chromosomes = {x.id:x for x in md.ModelData.createchromosomes()}
 
 

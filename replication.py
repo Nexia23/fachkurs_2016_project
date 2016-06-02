@@ -45,17 +45,11 @@ class Replication(Process):
         self.chromosomes = {} # dict für das neue Chromosom
         self.duplication = {}
 
-
-        
-
-        
     
     def update(self, model):
         if self.duplication == {}:
             self.duplication = {chrom: None for chrom in self.substrate_ids} # dict für schon replizierte Chromosome 
-        #call state (> transcription?)
-        # transcription blockiert die Stelle für replication
-        #for #key in #
+     
         self.chromosome_names = self.substrate_ids #Chromosom wird aufgerufen
 
         
@@ -64,10 +58,10 @@ class Replication(Process):
         self.old_chromosomes = [model.states[chromsome_name] for chromsome_name in self.chromosome_names]
         self.nucleotides = model.states['Nucleotides']
 
-        print(self.chromosome_names)
+        #print(self.old_chromosomes)
 
         
-        for i, old_chromosome in enumerate(self.old_chromosomes): # wenn das aufgerufene Chromosom folgende Bedingungen erfüllt wird es zur entprechenden Phase weitergeleitet
+        for i, old_chromosome in enumerate(self.old_chromosomes[0:16]): # wenn das aufgerufene Chromosom folgende Bedingungen erfüllt wird es zur entprechenden Phase weitergeleitet
             if not old_chromosome.replication_ori_bound and not self.duplication[self.chromosome_names[i]] and self.polymerase.count > 0 and self.helicase.count > 0:
                 self.initiate(old_chromosome) 
             elif old_chromosome.replication_ori_bound: #and not transcription an der Stelle:
@@ -77,13 +71,14 @@ class Replication(Process):
                 continue
             else:
                 raise NotImplementedError
+
         print(self.helicase.count)
         print(self.polymerase.count)
         #print(self.chromosome_names)
         #print(len(self.chromosome_names))
     
     def initiate(self, chrom: Chromosome):
-        print('initiation')
+        #print('initiation')
             
         self.chromosomes[chrom.id]=Chromosome(chrom.id,[])# legt das dict 'Chromosomes' an, Name bleibt erhalten, Sequenz ändert sich
                 # wenn die sequenz repliziert wird haben wir einen Gegenstrang, müsste der Formhalber nicht wieder davon der Gegenstrang genommen werden, 
@@ -95,7 +90,7 @@ class Replication(Process):
         self.duplication[chrom.id] = False # Chromosom ist noch nicht dupliziert
   
     def elongate(self, old_chrom: Chromosome):
-        print('elongation')
+        #print('elongation')
         #mehrere Schritte (Zeitschritte) >listeneinträge new_chrom  >>vgl alte sequ
             # dictionary 'chromosomes' enthält 'Chromosomname':'Eigenschaften(Name, Sequenz')
 
@@ -148,10 +143,10 @@ class Replication(Process):
                 self.nucleotides.count_nuc[sequence_to_replicate[i]] -=1
                 self.nucleotides.count_nuc[nucleotides[sequence_to_replicate[i]]] -=1
 
-        print(self.nucleotides.count_nuc)
-        print(sequence_to_replicate)
-        print(new_chrom.sequence)
-        print(len(new_chrom.sequence))
+        #print(self.nucleotides.count_nuc)
+        #print(sequence_to_replicate)
+        #print(new_chrom.sequence)
+        #print(len(new_chrom.sequence))
 
         
     def terminate(self, chrom, i):   
@@ -167,12 +162,12 @@ class Replication(Process):
 
 if __name__ == '__main__':
     rep = Replication('replication', 'replication')
-    print(rep.helicase)
-    print (rep.polymerase)
+    #print(rep.helicase)
+    #print (rep.polymerase)
     #chrom1 = Chromosome('chrom1', ['A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A''A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A'])
     #chrom1 = chr_list[0]
     #chrom2 = chr_list[1]
-    print (len(chrom1.sequence))
+    #print (len(chrom1.sequence))
 
     rep.initiate(chrom1)
     rep.elongate(chrom1)

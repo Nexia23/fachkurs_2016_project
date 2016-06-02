@@ -58,19 +58,21 @@ class Translation(processes.Process):
        
         self.ribosomes = model.states[list(self.enzyme_ids)[0]] # call in the dictionary states for the Ribsosome-object
 
-        mRNA_ids = []
+        mRNA_list = [] # list of current mRNA objects
         for state in model.states:
-            if isinstance(model.states[state], molecules.MRNA):
-                mRNA_ids.append(state)
+            if isinstance(model.states[state], list): # check whether model.states is a list
+            # if yes --> iterate over all elements and check whether they are mRNA
+                for elem in model.states[state]:
+                    if isinstance (elem, molecules.MRNA):
+                        mRNA_list.append(elem)
+        print(model.states)
+        print(mRNA_list)
         
         for i in range (10):
-            
-                
+                          
             #np.random.shuffle(mRNA_ids)         # List wird durch shuffle gemischt
-            for mrna_id in mRNA_ids:           # substrate should be a list for ids of all mrnas
-                                                            # initialise prot variable
-                                                # object of mRNA
-                mrna = model.states[mrna_id]
+            for mrna in mRNA_list:           # substrate should be a list for ids of all mrnas
+                                                          
                 # ribosoms work: bind, move, initialise, elongate
                 if mrna.sequence_triplet_binding[0] == 0:  # check if 1st codon is empty
                    
@@ -145,7 +147,7 @@ class Translation(processes.Process):
         @type mrna: MRNA
         """
         # !Jens! Da muss jemand kraeftig umbauen
-        
+        print(initiate)
         mrna.sequence_triplet_binding[i] = molecules.Protein("Protein_{}".format(mrna.mid),
                                                              "Protein_{0}".format(mrna.name.split("_")[-1]),
                                                              "",)

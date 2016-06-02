@@ -91,12 +91,12 @@ class Model:
         trsc = transcription.Transcription(1, 'Transcription')
 
         trsc.set_states(self.genes.keys(), self.polymerase2)
-        self.processes = {"Transkription": trsc}
+        self.processes["Transkription"] = trsc
 
 
         trsl = translation.Translation(1, "Translation")
         trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
-        self.processes = {"Translation": trsl}
+        self.processes["Translation"] = trsl
 
     def step(self):
         """
@@ -104,6 +104,7 @@ class Model:
 
         """
         for p in self.processes:
+            print(p)
             self.processes[p].update(self)
 
         for state in self.states:
@@ -118,12 +119,11 @@ class Model:
         """
         for s in range(steps):
             self.step()
-           # if log:  # This could be an entry point for further logging
-                # print count of each protein to the screen
-               # print('\r{}'.format([len(self.states[x]) for x in self.states.keys() if "Protein" in x], end=''))
+            if log:  # This could be an entry point for further logging
+                #print count of each protein to the screen
+                print('\r{}'.format([len(self.states[x]) for x in self.states.keys() if "Protein" in x], end=''))
 
 
 if __name__ == "__main__":
     c = Model()
-    c.simulate(5, log=True)
-    
+    c.simulate(15, log=True)

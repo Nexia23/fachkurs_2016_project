@@ -233,6 +233,7 @@ class Chromosome:
     """
     def __init__(self, id,  arf, fastaname):
         self._id=id
+        self.name = id # chromosome name is same as id
         self._fastaname=fastaname
         self._arf = arf
         self.binding_molecules=[[],[]]  #list with tuples of start and end positions of occupied regions in [0] and the binding molecule in [1]

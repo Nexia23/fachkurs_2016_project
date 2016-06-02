@@ -81,7 +81,7 @@ class Model:
         self.nucleotides= mol.NucleotidPool('Nucs','Nucleotides', 100000)
         self.helicases = {'DnaB': rep.Helicase("Helicase", "DnaB", 100)}
         self.polymerases = {'Polymerase3' :rep.Polymerase("Polymerase", "Polymerase3", 100)}
-        self.chromosomes = {x.id:x for x in md.ModelData.createchromosomes()}
+        self.chromosomes = {x.id:x for x in modeldata.ModelData.createchromosomes()}
 
 
     def __initialize_mRNA(self):

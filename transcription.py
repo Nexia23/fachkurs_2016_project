@@ -78,9 +78,9 @@ class Transcription(processes.Process):
 			if isinstance(rna, molecules.MRNA):
 				#rna_pool.append(rna)
 				if rna.name in model.states:
-					model.mrnas[rna.name].append(rna)
+					model.states[rna.name].append(rna)
 				else:
-					model.mrnas[rna.name] = [rna]
+					model.states[rna.name] = [rna]
 
     	####visualization of selected genes ######
 		#plt.plot(range(len(self.allgenes[0])),self.allgenes[1])
@@ -157,7 +157,7 @@ class Transcription(processes.Process):
 			copies.append(genedic[g].count)
 			transc_rate.append(genedic[g].transrate)
 			if genedic[g].pol_on_gene:
-				weight_for_binding.append(10000)
+				weight_for_binding.append(100000000)
 			else:
 				weight_for_binding.append(1)
 		copies=np.array(copies)
@@ -254,8 +254,6 @@ class Transcription(processes.Process):
 		for p in range(self.polymerase_size+1):
 			gene.sequence_binding[position-p]=0
 		del gene.pol_on_gene[gene.pol_on_gene.index(position)]
-
-		print('terminate!')
 
 		return rna
 

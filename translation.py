@@ -65,12 +65,13 @@ class Translation(processes.Process):
                 for elem in model.states[state]:
                     if isinstance (elem, molecules.MRNA):
                         mRNA_list.append(elem)
+                        print(elem.sequence_triplet_binding)                
         print(model.states)
         print(mRNA_list)
         
         for i in range (10):
                           
-            #np.random.shuffle(mRNA_ids)         # List wird durch shuffle gemischt
+            #np.random.shuffle(mRNA_list)         # List wird durch shuffle gemischt
             for mrna in mRNA_list:           # substrate should be a list for ids of all mrnas
                                                           
                 # ribosoms work: bind, move, initialise, elongate

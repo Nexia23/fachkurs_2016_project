@@ -64,11 +64,19 @@ class Translation(processes.Process):
             # if yes --> iterate over all elements and check whether they are mRNA
                 for elem in model.states[state]:
                     if isinstance (elem, molecules.MRNA):
-                        mRNA_list.append(elem)
+                        # check whether first start codon is in frame or not. If not: append 1 or 2 nucleotides to 5'-end of mRNA. Currently not needed, since mRNAs always start with AUG.
+                        bp_before_AUG = elem.sequence.find('AUG')
+                        if (bp_before_AUG != -1) and (bp_before_AUG%3 != 0): 
+                            if bp_before_AUG%3 == 1:
+                                elem.sequence = "UU" + elem.sequence
+                            if bp_before_AUG%3 ==2:
+                                elem.sequence = "U" + elem.sequence
+
+                        mRNA_list.append(elem) # store current mRNAs for translation
         
         for i in range (10):
                           
-            #np.random.shuffle(mRNA_list)         # List wird durch shuffle gemischt
+            np.random.shuffle(mRNA_list)         # List wird durch shuffle gemischt
             for mrna in mRNA_list:           # substrate should be a list for ids of all mrnas
                                                           
                 # ribosoms work: bind, move, initialise, elongate
@@ -101,7 +109,7 @@ class Translation(processes.Process):
     def move(self, mrna):
         """
         move not initiated ribosomes and also other ribosomes
-        
+
         """
 
         ribo_pos = [j for j, val in enumerate(mrna.sequence_triplet_binding) if val=='R'] #liste die R-positionen speichert also den index in triplet_binding 

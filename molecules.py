@@ -43,8 +43,8 @@ class BioMolecule:
         else:
             self.__mass = value
 
-    def __repr__(self): #string "self.name,type"		#print(list(object))
-        return ','.join([self.name, str(type(self))])
+    def __repr__(self): #string "self.name"		#print(list(object))
+        return self.name
 
    # def __str__(self):	#print(object)
         # todo: each class should have something like this
@@ -156,6 +156,7 @@ class Protein(Polymer):
         Protein.number_of_proteins+=1
         
 
+
     def __iadd__(self, AS):
         self.sequence = self.sequence + AS
         return self
@@ -234,11 +235,13 @@ class Chromosome:
     gene.sequence -> gives the sequence of the chromosome
     gene.revsequence -> gives out the reverse sequence of the chromosome
     """
-    def __init__(self, id,  arf, fastaname):
-        self._id=id
-        self.name = id # chromosome name is same as id
+
+    def __init__(self, id, name,  arf, fastaname):
+        self.id=id
+        self._name = name # chromosome name is same as id
         self._fastaname=fastaname
         self._arf = arf
+        self._name = name
         self.binding_molecules=[[],[]]  #list with tuples of start and end positions of occupied regions in [0] and the binding molecule in [1]
         self.replication_ori_bound = False
         
@@ -290,6 +293,9 @@ class Chromosome:
     @property
     def arf(self):
         return self._arf
+    @property
+    def name(self):
+        return self._name
     
         
     @property
@@ -310,11 +316,13 @@ class Chromosome:
 
     def chromosome_bound(self, range):
 
-        if isinstance(range, list):
+        if isinstance(range, tuple):
             #range[0]: startposition of test, range[1]: endposition of test
             iter=0
             bound_stuff=[]
             bound_found=False
+            if not self.binding_molecules[0]:
+                return None
             for tuples in self.binding_molecules[0]:
 
                 if bound_found==False:
@@ -355,8 +363,25 @@ class Chromosome:
             print("Argument type not expected (list or int)")
 
     #### method needed which stores a tuple of start&end and bound molecule in the ordered (!!!) list bindnig_molecules
-    def bind_to_chrom(start, end):
-        pass
+    def bind_to_chrom(self, tuple, object):
+        inserted=False
+        if self.binding_molecules:
+            for i in range(len(self.binding_molecules[0])):
+                if int(tuple[0]) < int(self.binding_molecules[0][i][0]):
+                    self.binding_molecules[0].insert(i, tuple)
+                    self.binding_molecules[1].insert(i, object)
+                    inserted=True
+        if inserted==False:
+            self.binding_molecules[0].append(tuple)
+            self.binding_molecules[1].append(object)
+
+
+    def del_on_chrom(self, tuple):
+        for i in range(len(self.binding_molecules[0])):
+            if tuple==self.binding_molecules[0][i]:
+                del self.binding_molecules[0][i]
+                del self.binding_molecules[1][i]
+                break
 
 
 class Gene:
@@ -390,9 +415,9 @@ class Gene:
         self.__sequence = sequence
         self.__transrate = transrate
         self.__halflive = halflive 
-        self.sequence_binding=[0]*len(sequence)
+        #self.sequence_binding=[0]*len(sequence)
         self.rnas_transcribed=0 							#number of transcribed RNAs during one transcription-process
-        self.pol_on_gene = []								#nucleotides transcribed by polymerases on the gene
+        self.pol_on_gene = [[],[]]								#nucleotides transcribed by polymerases on the gene ([0]) and RNA-object ([1])
 						
         
         if numpy.isnan(self.__transrate):

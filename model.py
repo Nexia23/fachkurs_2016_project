@@ -57,7 +57,7 @@ class Model:
         self.chromosomes = {}
         self.volume = 1
         self.db = modeldata.ModelData()
-        self.chromosomes=modeldata.ModelData.createchromosomes()    #list with chromosomes
+       # self.chromosomes=modeldata.ModelData.createchromosomes()    #list with chromosomes
         self.genes=modeldata.ModelData.creategenes()                #dictionary with genes
 
         self.__initialize_macromolecules()
@@ -69,7 +69,7 @@ class Model:
     def __initialize_macromolecules(self):
         self.ribosomes = {'Ribosomes': mol.Ribosome('Ribos', 'Ribosomes', 187000)}
         self.polymerase2= mol.RNAPolymeraseII('Pol2', 'Polymerase2', 100000000)
-        self.nucleotides= mol.NucleotidPool('Nucs','Nucleotides', 100000)
+        self.nucleotides= mol.NucleotidPool('Nucs','Nucleotides', 1000000000000)
         self.helicases = {'DnaB': rep.Helicase("Helicase", "DnaB", 100)}
         self.polymerases = {'Polymerase3' :rep.Polymerase("Polymerase", "Polymerase3", 100)}
         self.chromosomes = {x.id:x for x in modeldata.ModelData.createchromosomes()}
@@ -111,10 +111,10 @@ class Model:
         self.processes["Translation"] = trsl
 
         # replication
-        #repl =rep.Replication(2, "Replication")
-        #replication_enzyme_ids= list(self.helicases.keys()).extend(list(self.polymerases.keys()))
-        #repl.set_states(list(self.chromosomes.keys()), replication_enzyme_ids)
-        #self.processes.update({"Replication":repl})
+        repl =rep.Replication(2, "Replication")
+        replication_enzyme_ids= list(self.helicases.keys()).extend(list(self.polymerases.keys()))
+        repl.set_states(list(self.chromosomes.keys()), replication_enzyme_ids)
+        self.processes.update({"Replication":repl})
 
 
     def step(self):
@@ -138,9 +138,27 @@ class Model:
             self.step()
             if log:  # This could be an entry point for further logging
                 #print all states
-                print('\r{}'.format([self.states[x] for x in self.states.keys() ], end=''))
+
+
+              
+
+                print(self.states.keys())
+                a = 0
+                for i in self.states.keys():
+                	if str(i)[0].isdigit():
+                		a = 1+a
+                print("Die Anzahl der Chromosomen nach " + str(s) + " update Schritten beträgt " + str(a))
+
+                keylist = self.states.keys()
+                keylist = [str(x) for x in keylist]
+                
+                mrnalist = [x for x in keylist if "mRNA" in x]
+                print("Die Anzahl der mRNAs nach " + str(s) + " update Schritten beträgt " + str(len(mrnalist)))
+                print("Folgende mRNAs wurden kreiert: " + str([x for x in keylist if "mRNA" in x]))
+                print("es sind noch " + str(self.states["Nucleotides"].count) + " freie vorhanden")
 
 
 if __name__ == "__main__":
     c = Model()
     c.simulate(300, log=True)
+

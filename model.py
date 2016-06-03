@@ -126,7 +126,21 @@ class Model:
 if __name__ == "__main__":
     c = Model()
     c.simulate(1, log=True)
+    
     for g in list(c.genes.keys()):
         if c.genes[g].pol_on_gene[0]:
-            print(c.genes[g].pol_on_gene[1])
-    #print(c.mrnas)
+            print(c.genes[g].name)
+    print('\n Finished mRNAs \n')
+    print(len(list(c.states.keys()))-1)
+    '''
+    for state in c.states.keys():
+        if isinstance(c.states[state], list):
+            print(c.states[state])
+	'''            
+    '''
+    for g in list(c.genes.keys()):
+    	if c.genes[g].name=='PHB2':
+    		print(c.genes[g].sequence)
+    		print(c.genes[g].location[0])
+    
+	'''    

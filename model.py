@@ -57,7 +57,7 @@ class Model:
         self.chromosomes = {}
         self.volume = 1
         self.db = modeldata.ModelData()
-        self.chromosomes=modeldata.ModelData.createchromosomes()    #list with chromosomes
+       # self.chromosomes=modeldata.ModelData.createchromosomes()    #list with chromosomes
         self.genes=modeldata.ModelData.creategenes()                #dictionary with genes
 
         self.__initialize_macromolecules()
@@ -145,3 +145,4 @@ class Model:
 if __name__ == "__main__":
     c = Model()
     c.simulate(300, log=True)
+

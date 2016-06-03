@@ -43,8 +43,8 @@ class BioMolecule:
         else:
             self.__mass = value
 
-    def __repr__(self): #string "self.name,type"		#print(list(object))
-        return ','.join([self.name, str(type(self))])
+    def __repr__(self): #string "self.name"		#print(list(object))
+        return self.name
 
    # def __str__(self):	#print(object)
         # todo: each class should have something like this
@@ -97,7 +97,7 @@ class BioMoleculeCount(BioMolecule):        #new variable: number of molecules o
         self.__count = value
 
 
-class NucleotidPool(BioMolecule):
+class NucleotidPool(BioMoleculeCount):
     def __init__(self, mid, name, count):
         super().__init__(mid, name, count)
 
@@ -234,12 +234,13 @@ class Chromosome:
     gene.sequence -> gives the sequence of the chromosome
     gene.revsequence -> gives out the reverse sequence of the chromosome
     """
-   
-    def __init__(self, id, name, arf, fastaname):
+
+    def __init__(self, id, name,  arf, fastaname):
         self.id=id
         self._name = name # chromosome name is same as id
         self._fastaname=fastaname
         self._arf = arf
+        self._name = name
         self.binding_molecules=[[],[]]  #list with tuples of start and end positions of occupied regions in [0] and the binding molecule in [1]
         self.replication_ori_bound = False
         
@@ -265,7 +266,7 @@ class Chromosome:
             sequence_str[i] = converter_dictionary[sequence_str[i]]
         self._revsequence = sequence_str
 
-    #add befehl     
+    #add befehl   
     def __add__(self,chromosome):
         if not isinstance(chromosome,Chromosome):
             raise TypeError
@@ -281,7 +282,7 @@ class Chromosome:
     @id.setter
     def id(self, value):
         if not isinstance(value, int):
-            raise TypeError("MID must be an Integer.")
+            raise TypeError("ID must be an Integer.")
         self._id = value
         
     @property
@@ -308,6 +309,7 @@ class Chromosome:
     @property
     def fastaname(self):
         return self._fastaname
+
 
 #####this method will check for bound regions in the chromosome######
 

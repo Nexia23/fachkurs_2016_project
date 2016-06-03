@@ -101,14 +101,14 @@ class Model:
         """
         
         # transcription
-        #trsc = transcription.Transcription(0, 'Transcription')
-        #trsc.set_states(self.genes.keys(), self.polymerase2)
-        #self.processes["Transkription"] = trsc
+        trsc = transcription.Transcription(0, 'Transcription')
+        trsc.set_states(self.genes.keys(), self.polymerase2)
+        self.processes["Transkription"] = trsc
 
         # translation
-        #trsl = translation.Translation(1, "Translation")
-        #trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
-        #self.processes["Translation"] = trsl
+        trsl = translation.Translation(1, "Translation")
+        trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
+        self.processes["Translation"] = trsl
 
         # replication
         repl =rep.Replication(2, "Replication")
@@ -138,8 +138,24 @@ class Model:
             self.step()
             if log:  # This could be an entry point for further logging
                 #print all states
-                print('\r{}'.format([self.states[x] for x in self.states.keys() ], end=''))
+
+
               
+
+                print(self.states.keys())
+                a = 0
+                for i in self.states.keys():
+                	if str(i)[0].isdigit():
+                		a = 1+a
+                print("Die Anzahl der Chromosomen nach " + str(s) + " update Schritten beträgt " + str(a))
+
+                keylist = self.states.keys()
+                keylist = [str(x) for x in keylist]
+                
+                mrnalist = [x for x in keylist if "mRNA" in x]
+                print("Die Anzahl der mRNAs nach " + str(s) + " update Schritten beträgt " + str(len(mrnalist)))
+                print("Folgende mRNAs wurden kreiert: " + str([x for x in keylist if "mRNA" in x]))
+                print("es sind noch " + str(self.states["Nucleotides"].count) + " freie vorhanden")
 
 
 if __name__ == "__main__":

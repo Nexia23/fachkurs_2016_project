@@ -18,7 +18,7 @@ import random
 class Chromosome:
     def __init__(self, id, sequence):
         self.sequence = sequence
-        self.id = id   ### id!
+        self.id = id
         self.replication_ori_bound = False # beginnt ungebunden, 
         # da in der Replikation erstmal die Helikase und die Polymerase binden müssen 
         # > Initiationsbedingung
@@ -38,9 +38,6 @@ class Polymerase(BioMoleculeCount):
 
     def __str__(self):
         return 'polymerase: {0}'.format(self.count, self.name)
-
-    
-
 
 
 class Replication(Process):
@@ -94,12 +91,12 @@ class Replication(Process):
                 and protein_count >= 0:
                 self.initiate(old_chromosome) 
             elif old_chromosome.replication_ori_bound: #and not transcription an der Stelle:
+                self.elongate(old_chromosome)
+
                 chro = self.elongate(old_chromosome)
                 if isinstance(chro, molecules.Chromosome):
-                    name_repli = chro.id + "_replicated"
+                    name_repli = str(chro.id) + "_replicated"
                     model.states[name_repli] = chro
-
-
             elif (self.polymerase.count == 0 or self.helicase.count == 0) and \
              not old_chromosome.replication_ori_bound and not self.duplication[old_chromosome.id]:
                 continue
@@ -119,7 +116,7 @@ class Replication(Process):
             - zählt Helicase und Polymerase runter
             - setzt Chromosom auf gebunden
         '''  
-        self.chromosomes[chrom.id]=molecules.Chromosome(chrom.id, chrom.arf, chrom.fastaname) #Chromosome(chrom.id,[])
+        self.chromosomes[chrom.id]=molecules.Chromosome(chrom.id, chrom.name, chrom.arf, chrom.fastaname) #Chromosome(chrom.id,[])
 
         '''
         legt das dict 'Chromosomes' an, Name bleibt erhalten, Sequenz ändert sich
@@ -157,13 +154,21 @@ class Replication(Process):
 
         new_chrom = self.chromosomes[old_chrom.id]
         prob=[]
-       
+        #dictionary
         nucleotides = {'A':'T','T':'A','G':'C','C':'G'}
         transition = {'A':'C','T':'G','G':'T','C':'A'}
         transversion = {'A':'A','T':'T','G':'G','C':'C'}
 
+        
+        #import von initiation als old_chrom, hier wird das New_chrom erstellt >neue sequenz
+        
+        # replikation erfolgt mit 100 bp/s also in jedem timestep werden nur 100 nukleotide der Sequnenz gelesen und repliziert, 
+        # wenn die restlichen nukleotide weniger als 100 sind läuft die PM einfach bis zum Schluss der Sequenz, 
+        #leitet die Termination ein und returned die neue Sequence
+
         if len(new_chrom.sequence) == 0:
             sequence_to_replicate = old_chrom.sequence[0:200000]
+            # Bindung checken für 100-200 usw.
         elif len(old_chrom.sequence) - len(new_chrom.sequence) > 200000:
             sequence_to_replicate = old_chrom.sequence[len(new_chrom.sequence):len(new_chrom.sequence)+200000]
         elif len(old_chrom.sequence) - len(new_chrom.sequence) == 0:
@@ -171,6 +176,7 @@ class Replication(Process):
         else:
             sequence_to_replicate = old_chrom.sequence[len(new_chrom.sequence):]
         
+      
 
         for i in range(len(sequence_to_replicate)):
             x = random.randint(0,10000)
@@ -202,13 +208,10 @@ class Replication(Process):
         
         self.polymerase.count += 1
         self.helicase.count += 1
-        self.duplication[new_chrom.id] = True    #### hier sollte er auf den Key zugreifen (chrom ist ein Objekt)
+        self.duplication[new_chrom.id] = True
         new_chrom.replication_ori_bound = False
 
-        #print("terminate")
-
         return new_chrom
-
        
 
 
@@ -216,6 +219,10 @@ if __name__ == '__main__':
     rep = Replication('replication', 'replication')
     #print(rep.helicase)
     #print (rep.polymerase)
+    #chrom1 = Chromosome('chrom1', ['A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A''A','G','C','T','T','G','A','C','T','A','A','G','C','T','T','G','A','C','T','A'])
+    #chrom1 = chr_list[0]
+    #chrom2 = chr_list[1]
+    #print (len(chrom1.sequence))
 
     rep.initiate(chrom1)
     rep.elongate(chrom1)

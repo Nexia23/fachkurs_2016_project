@@ -152,6 +152,8 @@ class Protein(Polymer):
 
     def __init__(self, mid, name, sequence, mass=0):
         super().__init__(mid, name, sequence, mass)
+        Protein.number_of_proteins+=1
+        
 
     def __iadd__(self, AS):
         self.sequence = self.sequence + AS

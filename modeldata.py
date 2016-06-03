@@ -198,12 +198,3 @@ class ModelData:
                 #initiate a transcription, so that not all genes are unbound?
                 #circular problem: of an initiation, an initializes transcription-process is needed -> ṕrocesses need molecules
         return gene
-
-
-    def createwholegenome(chr_list):
-
-        whole_genome = ""
-        for i in range(len(chr_list)):
-            whole_genome += chr_list[i].sequence
-
-        return whole_genome

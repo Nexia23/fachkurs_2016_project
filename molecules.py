@@ -107,13 +107,30 @@ class NucleotidPool(BioMolecule):
 class MRNA(Polymer):
     def __init__(self, mid, name, sequence, mass=0):
         super().__init__(mid, name, sequence, mass)
-        self.sequence_triplet_binding = [0] * (len(sequence) // 3)
+        self.__sequence = sequence
+        self.update_binding_array()
+
+    @property
+    def sequence(self):
+        return self.__sequence
+
+    @sequence.setter
+    def sequence(self, value):
+        if not isinstance(value, str):
+            raise Exception("sequence must be a string")
+        self.__sequence = value.upper()
+        self.calculate_mass()
+        self.update_binding_array()
 
     def calculate_mass(self):
         self.mass = 0
         NA_mass = {'A': 1.0, 'U': 2.2, 'G': 2.1, 'C': 1.3}
         for na in self.sequence:
             self.mass += NA_mass[na]
+
+    def update_binding_array(self):
+        self.sequence_triplet_binding = [0] * (len(self.sequence) // 3)
+
 
 
 class Protein(Polymer):
@@ -214,11 +231,12 @@ class Chromosome:
     gene.sequence -> gives the sequence of the chromosome
     gene.revsequence -> gives out the reverse sequence of the chromosome
     """
-    def __init__(self, mid, name,  arf, fastaname):
-        self._mid=mid
+   
+    def __init__(self, id, name, arf, fastaname):
+        self.id=id
+        self._name = name # chromosome name is same as id
         self._fastaname=fastaname
         self._arf = arf
-        self._name = name
         self.binding_molecules=[[],[]]  #list with tuples of start and end positions of occupied regions in [0] and the binding molecule in [1]
         self.replication_ori_bound = False
         
@@ -255,13 +273,13 @@ class Chromosome:
     #getter für id, sequence & revsequence
 
     @property
-    def mid(self):
-        return self._mid
-    @mid.setter
-    def mid(self, value):
+    def id(self):
+        return self._id
+    @id.setter
+    def id(self, value):
         if not isinstance(value, int):
             raise TypeError("MID must be an Integer.")
-        self._mid = value
+        self._id = value
         
     @property
     def sequence(self):
@@ -400,6 +418,8 @@ class Gene:
             self.__transrate = 0.00123056
         if numpy.isnan(self.__halflive):
             self.__halflive = 0.262
+    ###### COMMENT for DATA GROUP #######
+    #feel free to replace 'sequence'-information by start-, end-positions and strand (+/-)
 
     ###### COMMENT FOR REPLICATION_GROUP #######
     #count: 1 for unreplicated gene, 2 for copied gene 

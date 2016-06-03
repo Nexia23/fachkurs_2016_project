@@ -68,9 +68,10 @@ class Transcription(processes.Process):
 		self.my_nucleotides=model.nucleotides
 
 		#number still needed: empirically! 
-		update_per_s=1000
+		update_per_s=500
 
 		gene_id, weights=self.make_weights(genedic)
+
 
 		for steps in range(update_per_s):
 			#rna = self.onestep(genedic)
@@ -101,24 +102,13 @@ class Transcription(processes.Process):
 
 			if not transc_gene.pol_on_gene[0]: 
 
-
 				if bound_gene==False:
-
-					print("First initialize")
-			#print (transc_gene.name)
-			#if random.randint(1,10)==1:
 					self.intialization(transc_gene, model.chromosomes, weights, gene_id)
-					print (transc_gene.name)
 				elif bound_gene==True and random.randint(1,40)==20:
-					print("Empty gene initialized")
 					self.intialization(transc_gene, model.chromosomes, weights, gene_id)
 
 			##2. initialization?
 			else:
-				#new_pol = self.rand_distr(transc_gene, gene_id, weights) 
-			#initializations
-				#if new_pol==1 and self.mypolymerase.count>0:
-				print("Further initialize")
 				self.intialization(transc_gene, model.chromosomes, weights, gene_id)
 
 			#print('Step ended \n')
@@ -140,9 +130,10 @@ class Transcription(processes.Process):
 			strand='-'
 
 			#get chromosome-position: on which chromosome are we? 
-		for chr in all_chromosomes:
-			if transc_gene.chr==chr.mid:
-				mychr=chr
+		for chr in list(all_chromosomes.keys()):
+			if transc_gene.chr==all_chromosomes[chr].id:
+				mychr=all_chromosomes[chr]
+				break
 
 		pol_position=pos
 		mrna = self.transcribe(transc_gene, pol_position, mychr, strand)
@@ -154,9 +145,9 @@ class Transcription(processes.Process):
 	def intialization(self, transc_gene, all_chromosomes, weights, gene_ids):
 		chr_found=False
 
-		for chr in all_chromosomes:
-			if transc_gene.chr==chr.mid:
-				mychr=chr
+		for chr in list(all_chromosomes.keys()):
+			if transc_gene.chr==all_chromosomes[chr].id:
+				mychr=all_chromosomes[chr]
 				break
 		
 			
@@ -336,8 +327,6 @@ class Transcription(processes.Process):
 		del gene.pol_on_gene[1][gene.pol_on_gene[0].index(position)]
 		del gene.pol_on_gene[0][gene.pol_on_gene[0].index(position)]
 		
-
-		print('terminate!')
 
 		return rna
 

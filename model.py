@@ -1,6 +1,7 @@
 import modeldata
 import molecules as mol
 import translation
+import replication as rep
 import transcription
 
 class Output:
@@ -51,52 +52,62 @@ class Model:
         self.timestep = 0
         self.mrnas = {}  # all selfs should be initialized in the constructor
         self.ribosomes = {} #dictionary will be filled with 10 Ribosomes
+        self.helicases = {}
+        self.polymerases = {}
+        self.chromosomes = {}
         self.volume = 1
         self.db = modeldata.ModelData()
-        self.chromosomes=modeldata.ModelData.createchromosomes()	#list with chromosomes
-        self.genes=modeldata.ModelData.creategenes()				#dictionary with genes
+       # self.chromosomes=modeldata.ModelData.createchromosomes()    #list with chromosomes
+        self.genes=modeldata.ModelData.creategenes()                #dictionary with genes
 
-        # ribosomes
         self.__initialize_macromolecules()
-        # mRNAs
-       # self.__initialize_mRNA()
-
         self.__initialize_states()
         self.__initialize_processes()
         self.results = Output(self)  
 
 
-
     def __initialize_macromolecules(self):
         self.ribosomes = {'Ribosomes': mol.Ribosome('Ribos', 'Ribosomes', 10)}
-        self.polymerase2= mol.RNAPolymeraseII('Pol2', 'Polymerase2', 100000000)
+        self.polymerase2= mol.RNAPolymeraseII('Pol2', 'Polymerase2', 1000000)
         self.nucleotides= mol.NucleotidPool('Nucs','Nucleotides', 100000)
+        self.helicases = {'DnaB': rep.Helicase("Helicase", "DnaB", 100)}
+        self.polymerases = {'Polymerase3' :rep.Polymerase("Polymerase", "Polymerase3", 100)}
+        self.chromosomes = {x.id:x for x in modeldata.ModelData.createchromosomes()}
 
-   # def __initialize_mRNA(self):
-        # I think to have a function for each molecule state generation is more intuitive and less error prone
-     #   for i, mrna in enumerate(self.db.get_states(mol.MRNA)):
-     #       mid, name, sequence = mrna
-     #       self.mrnas[mid] = mol.MRNA(mid, name, sequence)
-     #       #dict_mrnas[key] = newmRNA
 
     def __initialize_states(self):
         """
         initialize the different states
         """
-
         self.states.update(self.ribosomes)  #adding dictionaries to self.states
+        self.states.update(self.helicases)
+        self.states.update(self.polymerases)
+        self.states.update(self.chromosomes)
         self.states.update(self.mrnas)
+        self.states["Nucleotides"] = self.nucleotides
+
 
     def __initialize_processes(self):
-    	trsc = transcription.Transcription(1, 'Transcription')
+        """
+        initialize processes
+        """
+        
+        # transcription
+        trsc = transcription.Transcription(0, 'Transcription')
+        trsc.set_states(self.genes.keys(), self.polymerase2)
+        self.processes["Transkription"] = trsc
 
-    	trsc.set_states(self.genes.keys(), self.polymerase2)
-    	self.processes = {"Transkription": trsc}
+        # translation
+        trsl = translation.Translation(1, "Translation")
+        trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
+        self.processes["Translation"] = trsl
 
+        # replication
+        repl =rep.Replication(2, "Replication")
+        replication_enzyme_ids= list(self.helicases.keys()).extend(list(self.polymerases.keys()))
+        repl.set_states(list(self.chromosomes.keys()), replication_enzyme_ids)
+        self.processes.update({"Replication":repl})
 
-        #trsl = translation.Translation(1, "Translation")
-        #trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
-        #self.processes = {"Translation": trsl}
 
     def step(self):
         """
@@ -114,33 +125,14 @@ class Model:
     def simulate(self, steps, log=True):
         """
         Simulate the model for some time.
-
         """
         for s in range(steps):
             self.step()
-           # if log:  # This could be an entry point for further logging
-                # print count of each protein to the screen
-               # print('\r{}'.format([len(self.states[x]) for x in self.states.keys() if "Protein" in x], end=''))
+            if log:  # This could be an entry point for further logging
+                #print all states
+                print('\r{}'.format([self.states[x] for x in self.states.keys() ], end=''))
 
 
 if __name__ == "__main__":
     c = Model()
     c.simulate(1, log=True)
-    
-    for g in list(c.genes.keys()):
-        if c.genes[g].pol_on_gene[0]:
-            print(c.genes[g].name)
-    print('\n Finished mRNAs \n')
-    print(len(list(c.states.keys()))-1)
-    '''
-    for state in c.states.keys():
-        if isinstance(c.states[state], list):
-            print(c.states[state])
-	'''            
-    '''
-    for g in list(c.genes.keys()):
-    	if c.genes[g].name=='PHB2':
-    		print(c.genes[g].sequence)
-    		print(c.genes[g].location[0])
-    
-	'''    

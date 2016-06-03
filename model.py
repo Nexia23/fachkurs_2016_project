@@ -69,7 +69,7 @@ class Model:
     def __initialize_macromolecules(self):
         self.ribosomes = {'Ribosomes': mol.Ribosome('Ribos', 'Ribosomes', 10)}
         self.polymerase2= mol.RNAPolymeraseII('Pol2', 'Polymerase2', 100000000)
-        self.nucleotides= mol.NucleotidPool('Nucs','Nucleotides', 100000)
+        self.nucleotides= mol.NucleotidPool('Nucs','Nucleotides', 1000000000000)
         self.helicases = {'DnaB': rep.Helicase("Helicase", "DnaB", 100)}
         self.polymerases = {'Polymerase3' :rep.Polymerase("Polymerase", "Polymerase3", 100)}
         self.chromosomes = {x.id:x for x in modeldata.ModelData.createchromosomes()}
@@ -93,14 +93,14 @@ class Model:
         """
         
         # transcription
-        trsc = transcription.Transcription(0, 'Transcription')
-        trsc.set_states(self.genes.keys(), self.polymerase2)
-        self.processes["Transkription"] = trsc
+        #trsc = transcription.Transcription(0, 'Transcription')
+        #trsc.set_states(self.genes.keys(), self.polymerase2)
+        #self.processes["Transkription"] = trsc
 
         # translation
-        trsl = translation.Translation(1, "Translation")
-        trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
-        self.processes["Translation"] = trsl
+        #trsl = translation.Translation(1, "Translation")
+        #trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
+        #self.processes["Translation"] = trsl
 
         # replication
         repl =rep.Replication(2, "Replication")
@@ -131,6 +131,7 @@ class Model:
             if log:  # This could be an entry point for further logging
                 #print all states
                 print('\r{}'.format([self.states[x] for x in self.states.keys() ], end=''))
+                print(self.states.keys())
 
 
 if __name__ == "__main__":

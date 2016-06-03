@@ -68,7 +68,7 @@ class Transcription(processes.Process):
 		self.my_nucleotides=model.nucleotides
 
 		#number still needed: empirically! 
-		update_per_s=100
+		update_per_s=50
 
 		gene_id, weights=self.make_weights(genedic)
 
@@ -84,7 +84,7 @@ class Transcription(processes.Process):
 				g=genedic[g]
 				for i in g.pol_on_gene[0]:
 					if random.randint(1,9)<9:
-						#print('elongate!')
+						print('elongate!')
 						rna = self.elongation(g, model.chromosomes, i)
 						bound_gene=True
 
@@ -112,7 +112,7 @@ class Transcription(processes.Process):
 				print("Further initialize")
 				self.intialization(transc_gene, model.chromosomes, weights, gene_id)
 
-			#print('Step ended \n')
+			print('Step ended \n')
 				
 
     	####visualization of selected genes ######
@@ -125,7 +125,7 @@ class Transcription(processes.Process):
 
 	def elongation(self, transc_gene, all_chromosomes, pos):
 
-		if transc_gene.location[0][0]< transc_gene.location[0][1]:
+		if int(transc_gene.location[0][0])< int(transc_gene.location[0][1]):
 			strand='+'
 		else:
 			strand='-'
@@ -244,21 +244,7 @@ class Transcription(processes.Process):
 			mrna=gene.pol_on_gene[1][index]
 
 			#appending the correct codon from the coding strand
-			if strand=='+':
-				nuc=gene.sequence[pos-int(gene.location[0][0])]
-			else:
-				nuc=gene.sequence[pos+int(gene.location[0][0])]
-
-			if nuc=='T':
-				mrna.sequence+='U'
-				self.my_nucleotides.count_nuc['U']+=-1
-			else:
-				mrna.sequence+=nuc
-				self.my_nucleotides.count_nuc[nuc]+=-1
-
-
-
-
+			
 			#polymerase moves forward! in which direction to move? (strand-dependend)
 			if strand=='+':
 
@@ -266,31 +252,68 @@ class Transcription(processes.Process):
 				if pos+1<int(gene.location[0][1]):
 
 					if mychr.chromosome_bound(pos+self.polymerase_size+1) is None:
+						nuc=gene.sequence[pos-int(gene.location[0][0])]
+
+						if nuc=='T':
+							mrna.sequence+='U'
+							self.my_nucleotides.count_nuc['U']+=-1
+						else:
+							mrna.sequence+=nuc
+							self.my_nucleotides.count_nuc[nuc]+=-1
+
 						mychr.del_on_chrom((pos-self.polymerase_size, pos+self.polymerase_size))
 						mychr.bind_to_chrom((pos-self.polymerase_size+1, pos+self.polymerase_size+1), self.mypolymerase)
 						gene.pol_on_gene[0][index]+=1
 						pos+=1
-						return 0
 
 				else:
+					nuc=gene.sequence[int(gene.location[0][0])-pos]
+
+
+					if nuc=='T':
+						mrna.sequence+='U'
+						self.my_nucleotides.count_nuc['U']+=-1
+					else:
+						mrna.sequence+=nuc
+						self.my_nucleotides.count_nuc[nuc]+=-1
+
 					mychr.del_on_chrom((pos-self.polymerase_size, pos+self.polymerase_size))
 					return self.terminate(gene, pos)
 
 			else:
-
 				if pos-1>int(gene.location[0][1]):
 
-					if mychr.chromosome_bound(pos+self.polymerase_size-1) is None:
+					if mychr.chromosome_bound(pos-self.polymerase_size-1) is None:
+						nuc=gene.sequence[int(gene.location[0][0])-pos]
+
+
+						if nuc=='T':
+							mrna.sequence+='U'
+							self.my_nucleotides.count_nuc['U']+=-1
+						else:
+							mrna.sequence+=nuc
+							self.my_nucleotides.count_nuc[nuc]+=-1
+
 						mychr.del_on_chrom((pos-self.polymerase_size, pos+self.polymerase_size))
 						mychr.bind_to_chrom((pos-self.polymerase_size-1, pos+self.polymerase_size-1), self.mypolymerase)
-						gene.pol_on_gene[0][index]-=1
-						pos -=1
-						return 0
-
+						gene.pol_on_gene[0][index]+=-1
+						pos +=-1
 				else:
+
+					nuc=gene.sequence[int(gene.location[0][0])-pos]
+
+
+					if nuc=='T':
+						mrna.sequence+='U'
+						self.my_nucleotides.count_nuc['U']+=-1
+					else:
+						mrna.sequence+=nuc
+						self.my_nucleotides.count_nuc[nuc]+=-1
+
 					mychr.del_on_chrom((pos-self.polymerase_size, pos+self.polymerase_size))
 					return self.terminate(gene, pos)
 			
+		return 0
 
 
 

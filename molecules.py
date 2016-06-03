@@ -353,10 +353,11 @@ class Chromosome:
 
 
     def del_on_chrom(self, tuple):
-        for i in range(len(self.binding_molecules[0])-1):
+        for i in range(len(self.binding_molecules[0])):
             if tuple==self.binding_molecules[0][i]:
                 del self.binding_molecules[0][i]
                 del self.binding_molecules[1][i]
+                break
 
 
 class Gene:

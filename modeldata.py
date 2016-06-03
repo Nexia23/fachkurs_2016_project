@@ -43,10 +43,10 @@ class ModelData:
             alphabet = list(self.code.keys())
             mrnas = []
             genes = {}
-            for i in range(10):
+            for i in range(1):
                 sequence = ''.join([rnd.choice(alphabet) for i in range(rnd.randint(50, 500))])
                 genes[''.join([rnd.choice(string.ascii_uppercase) for i in range(3)])] = sequence
-
+                 
 
             for gene in genes:
                 for i in range(rnd.randint(1, 10)):

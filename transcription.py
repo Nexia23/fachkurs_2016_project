@@ -68,7 +68,7 @@ class Transcription(processes.Process):
 		self.my_nucleotides=model.nucleotides
 
 		#number still needed: empirically! 
-		update_per_s=50
+		update_per_s=1000
 
 		gene_id, weights=self.make_weights(genedic)
 
@@ -83,11 +83,11 @@ class Transcription(processes.Process):
 			for g in gene_id:
 				g=genedic[g]
 				for i in g.pol_on_gene[0]:
-					if random.randint(1,9)<9:
-						print('elongate!')
+					bound_gene=True
+					if random.randint(1,10)<9:
+						#print('elongate!')
 						rna = self.elongation(g, model.chromosomes, i)
-						bound_gene=True
-
+						
 						if isinstance(rna, molecules.MRNA):
 					#rna_pool.append(rna)
 							if rna.name in model.states:
@@ -99,20 +99,29 @@ class Transcription(processes.Process):
 			while len(transc_gene.location) >1:
 				transc_gene=self.select_gene(genedic)
 
-			if bound_gene==False: 
-				print("First initialize")
-				print (transc_gene.name)
-				self.intialization(transc_gene, model.chromosomes, weights, gene_id)
+			if not transc_gene.pol_on_gene[0]: 
 
 
+				if bound_gene==False:
 
-			new_pol = self.rand_distr(transc_gene, gene_id, weights) 
+					print("First initialize")
+			#print (transc_gene.name)
+			#if random.randint(1,10)==1:
+					self.intialization(transc_gene, model.chromosomes, weights, gene_id)
+					print (transc_gene.name)
+				elif bound_gene==True and random.randint(1,40)==20:
+					print("Empty gene initialized")
+					self.intialization(transc_gene, model.chromosomes, weights, gene_id)
+
+			##2. initialization?
+			else:
+				#new_pol = self.rand_distr(transc_gene, gene_id, weights) 
 			#initializations
-			if new_pol==1 and self.mypolymerase.count>0:
+				#if new_pol==1 and self.mypolymerase.count>0:
 				print("Further initialize")
 				self.intialization(transc_gene, model.chromosomes, weights, gene_id)
 
-			print('Step ended \n')
+			#print('Step ended \n')
 				
 
     	####visualization of selected genes ######
@@ -164,24 +173,24 @@ class Transcription(processes.Process):
 		#	self.allgenes[0].append(transc_gene.name)
 		#	self.allgenes[1].append(1)
 		#########################################################
-		#try:
-		if mychr.chromosome_bound((int(transc_gene.location[0][0])-self.polymerase_size,int(transc_gene.location[0][0])+self.polymerase_size)) is None and self.mypolymerase.count>0:
-			#print('Initiate!')
-			mychr.bind_to_chrom( (int(transc_gene.location[0][0])-self.polymerase_size,int(transc_gene.location[0][0])+self.polymerase_size), self.mypolymerase)
-			""" for one Polymerase: look for a gene to transcribe. when ORF is found: initiate """
+		try:
+			if mychr.chromosome_bound((int(transc_gene.location[0][0])-self.polymerase_size,int(transc_gene.location[0][0])+self.polymerase_size)) is None and self.mypolymerase.count>0:
+				#print('Initiate!')
+				mychr.bind_to_chrom( (int(transc_gene.location[0][0])-self.polymerase_size,int(transc_gene.location[0][0])+self.polymerase_size), self.mypolymerase)
+				""" for one Polymerase: look for a gene to transcribe. when ORF is found: initiate """
 
 				#### from the data group: we expect an self.genes-dictionary in model.py containing all genes
 
 		
-			if isinstance(self.mypolymerase, molecules.RNAPolymeraseII): 
-				transc_gene.pol_on_gene[0].append(int(transc_gene.location[0][0]))
-				transc_gene.pol_on_gene[1].append(molecules.MRNA("mRNA_{}".format(transc_gene.mid), "mRNA_{0}".format(transc_gene.name), '',))
+				if isinstance(self.mypolymerase, molecules.RNAPolymeraseII): 
+					transc_gene.pol_on_gene[0].append(int(transc_gene.location[0][0]))
+					transc_gene.pol_on_gene[1].append(molecules.MRNA("mRNA_{}".format(transc_gene.mid), "mRNA_{0}".format(transc_gene.name), '',))
 			
 			
-			self.mypolymerase.count+=-1
+				self.mypolymerase.count+=-1
 	
-		#except UnboundLocalError:
-		#	pass
+		except UnboundLocalError:
+			pass
 
 
 
@@ -213,13 +222,14 @@ class Transcription(processes.Process):
 			copies.append(genedic[g].count)
 			transc_rate.append(genedic[g].transrate)
 			if genedic[g].pol_on_gene:
-				weight_for_binding.append(10000)
+				weight_for_binding.append(1000000000)
 			else:
 				weight_for_binding.append(1)
 		copies=np.array(copies)
 		transc_rate=np.array(transc_rate)
 
 		weights=copies*transc_rate*weight_for_binding
+		#weights=copies*transc_rate
 		weights=weights/sum(weights)
 
 		rand_index=np.random.choice(range(len(weights)),p=weights)
@@ -333,7 +343,7 @@ class Transcription(processes.Process):
 
 
 	def rand_distr(self, gene, gene_ids, weights): #if gene_ids and weight are global we don't need to send them in the function 
-		ran=random.uniform(0,1)
+		ran=random.gauss(0.1,0.05)
 		index_id = gene_ids.index(gene.mid)
 		if weights[index_id]>= ran:
 			return 1

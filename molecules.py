@@ -231,8 +231,14 @@ class Chromosome:
     gene.sequence -> gives the sequence of the chromosome
     gene.revsequence -> gives out the reverse sequence of the chromosome
     """
+<<<<<<< HEAD
     def __init__(self, mid, name,  arf, fastaname):
         self._mid=mid
+=======
+    def __init__(self, id,  arf, fastaname):
+        self._id=id
+        self.name = id # chromosome name is same as id
+>>>>>>> f4a56623e688add816268eeb416c8b7df76cb545
         self._fastaname=fastaname
         self._arf = arf
         self._name = name

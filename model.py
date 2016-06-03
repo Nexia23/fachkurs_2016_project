@@ -111,10 +111,10 @@ class Model:
         #self.processes["Translation"] = trsl
 
         # replication
-        #repl =rep.Replication(2, "Replication")
-        #replication_enzyme_ids= list(self.helicases.keys()).extend(list(self.polymerases.keys()))
-        #repl.set_states(list(self.chromosomes.keys()), replication_enzyme_ids)
-        #self.processes.update({"Replication":repl})
+        repl =rep.Replication(2, "Replication")
+        replication_enzyme_ids= list(self.helicases.keys()).extend(list(self.polymerases.keys()))
+        repl.set_states(list(self.chromosomes.keys()), replication_enzyme_ids)
+        self.processes.update({"Replication":repl})
 
 
     def step(self):
@@ -139,7 +139,7 @@ class Model:
             if log:  # This could be an entry point for further logging
                 #print all states
                 print('\r{}'.format([self.states[x] for x in self.states.keys() ], end=''))
-                print(self.states.keys())
+              
 
 
 if __name__ == "__main__":

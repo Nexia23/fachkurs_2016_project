@@ -77,6 +77,7 @@ class Replication(Process):
         self.helicase = model.states['DnaB']
         self.old_chromosomes = [model.states[chromsome_name] for chromsome_name in self.chromosome_names]
         self.nucleotides = model.states['Nucleotides']
+        protein_count = molecules.Protein.number_of_proteins
         #self.protein = model.statesxxx#
 
 
@@ -89,8 +90,8 @@ class Replication(Process):
                 and not self.duplication[self.chromosome_names[i]]\
                 and self.polymerase.count > 0\
                 and self.helicase.count > 0\
-                and nuc > len(old_chromosome.sequence)*2:
-                #and self.protein.count > 5:
+                and nuc > len(old_chromosome.sequence)*2\
+                and protein_count >= 0:
                 self.initiate(old_chromosome) 
             elif old_chromosome.replication_ori_bound: #and not transcription an der Stelle:
                 chro = self.elongate(old_chromosome)
@@ -204,7 +205,7 @@ class Replication(Process):
         self.duplication[new_chrom.id] = True    #### hier sollte er auf den Key zugreifen (chrom ist ein Objekt)
         new_chrom.replication_ori_bound = False
 
-        print("terminate")
+        #print("terminate")
 
         return new_chrom
 

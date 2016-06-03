@@ -57,7 +57,7 @@ class Model:
         self.chromosomes = {}
         self.volume = 1
         self.db = modeldata.ModelData()
-        self.chromosomes=modeldata.ModelData.createchromosomes()    #list with chromosomes
+       # self.chromosomes=modeldata.ModelData.createchromosomes()    #list with chromosomes
         self.genes=modeldata.ModelData.creategenes()                #dictionary with genes
 
         self.__initialize_macromolecules()
@@ -130,45 +130,35 @@ class Model:
 
         self.timestep += 1
 
-        """
-
-        """
-
     def simulate(self, steps, log=True):
         """
         Simulate the model for some time.
         """
         for s in range(steps):
             self.step()
-            
             if log:  # This could be an entry point for further logging
-
                 #print all states
-                #print('\r{}'.format([self.states[x] for x in self.states.keys() ], end=''))
-                #print([self.states[x] for x in self.states.keys()])
+
+
+              
+
                 print(self.states.keys())
                 a = 0
                 for i in self.states.keys():
-                	if str(i).isdigit():
+                	if str(i)[0].isdigit():
                 		a = 1+a
                 print("Die Anzahl der Chromosomen nach " + str(s) + " update Schritten beträgt " + str(a))
 
                 keylist = self.states.keys()
                 keylist = [str(x) for x in keylist]
                 
-                print([x for x in keylist if "mRNA" in x])
-
                 mrnalist = [x for x in keylist if "mRNA" in x]
                 print("Die Anzahl der mRNAs nach " + str(s) + " update Schritten beträgt " + str(len(mrnalist)))
                 print("Folgende mRNAs wurden kreiert: " + str([x for x in keylist if "mRNA" in x]))
                 print("es sind noch " + str(self.states["Nucleotides"].count) + " freie vorhanden")
 
+
 if __name__ == "__main__":
     c = Model()
-    #for g in list(c.genes.keys())[0:100]:
-    #    print(c.genes[g].transrate)
-    c.simulate(5, log=True)
-    #for g in list(c.genes.keys()):
-    #	if c.genes[g].pol_on_gene:
-    #		print(c.genes[g].pol_on_gene)
+    c.simulate(300, log=True)
 

@@ -92,12 +92,11 @@ class Replication(Process):
                 self.initiate(old_chromosome) 
             elif old_chromosome.replication_ori_bound: #and not transcription an der Stelle:
                 self.elongate(old_chromosome)
-                
+
                 chro = self.elongate(old_chromosome)
                 if isinstance(chro, molecules.Chromosome):
                     name_repli = str(chro.id) + "_replicated"
                     model.states[name_repli] = chro
-
             elif (self.polymerase.count == 0 or self.helicase.count == 0) and \
              not old_chromosome.replication_ori_bound and not self.duplication[old_chromosome.id]:
                 continue

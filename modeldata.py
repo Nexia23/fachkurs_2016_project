@@ -86,7 +86,6 @@ class ModelData:
         chr_list=[chr1,chr2,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chrmito]
             
         return chr_list
-
     
     def createwholegenome(chr_list):
 
@@ -194,5 +193,7 @@ class ModelData:
         gene = {}
         for i in range(len(gene_id)):
             gene[gene_id[i]] = mol.Gene(gene_id[i], gene_name[i], which_chr[i], gene_seq[i], loc_list[i], transcription[i], halflive[i])
-
+           # if i < len(gene_id)/2:
+                #initiate a transcription, so that not all genes are unbound?
+                #circular problem: of an initiation, an initializes transcription-process is needed -> ṕrocesses need molecules
         return gene

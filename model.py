@@ -63,18 +63,26 @@ class Model:
         self.__initialize_macromolecules()
         self.__initialize_states()
         self.__initialize_processes()
-        self.results = Output(self)  
+        #self.results = Output(self)  
 
 
     def __initialize_macromolecules(self):
-        self.ribosomes = {'Ribosomes': mol.Ribosome('Ribos', 'Ribosomes', 10)}
+        self.ribosomes = {'Ribosomes': mol.Ribosome('Ribos', 'Ribosomes', 187000)}
         self.polymerase2= mol.RNAPolymeraseII('Pol2', 'Polymerase2', 100000000)
         self.nucleotides= mol.NucleotidPool('Nucs','Nucleotides', 100000)
         self.helicases = {'DnaB': rep.Helicase("Helicase", "DnaB", 100)}
         self.polymerases = {'Polymerase3' :rep.Polymerase("Polymerase", "Polymerase3", 100)}
         self.chromosomes = {x.id:x for x in modeldata.ModelData.createchromosomes()}
-
-
+        
+        #for i, mrna in enumerate(self.db.get_states(mol.MRNA)):
+         #   mid, name, sequence = mrna
+          #  sequence=list(sequence)
+           # sequence[0:3]='AUG'
+            #sequence[12:15]='UGA'
+            #sequence=''.join(sequence)
+            #self.mrnas[mid] = [mol.MRNA(mid, name, sequence)]
+            
+        
     def __initialize_states(self):
         """
         initialize the different states
@@ -103,10 +111,10 @@ class Model:
         self.processes["Translation"] = trsl
 
         # replication
-        repl =rep.Replication(2, "Replication")
-        replication_enzyme_ids= list(self.helicases.keys()).extend(list(self.polymerases.keys()))
-        repl.set_states(list(self.chromosomes.keys()), replication_enzyme_ids)
-        self.processes.update({"Replication":repl})
+        #repl =rep.Replication(2, "Replication")
+        #replication_enzyme_ids= list(self.helicases.keys()).extend(list(self.polymerases.keys()))
+        #repl.set_states(list(self.chromosomes.keys()), replication_enzyme_ids)
+        #self.processes.update({"Replication":repl})
 
 
     def step(self):
@@ -117,8 +125,8 @@ class Model:
         for p in self.processes:
             self.processes[p].update(self)
 
-        for state in self.states:
-            self.results.add_timepoint(state)
+        #for state in self.states:
+         #   self.results.add_timepoint(state)
 
         self.timestep += 1
 
@@ -135,4 +143,4 @@ class Model:
 
 if __name__ == "__main__":
     c = Model()
-    c.simulate(15, log=True)
+    c.simulate(300, log=True)

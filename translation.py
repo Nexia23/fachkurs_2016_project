@@ -60,6 +60,7 @@ class Translation(processes.Process):
 
         mRNA_list = [] # list of current mRNA objects
         for state in model.states:
+
             if isinstance(model.states[state], list): # check whether model.states is a list
             # if yes --> iterate over all elements and check whether they are mRNA
                 for elem in model.states[state]:
@@ -73,7 +74,9 @@ class Translation(processes.Process):
                                 elem.sequence = "U" + elem.sequence
 
                         mRNA_list.append(elem) # store current mRNAs for translation
-        
+                        
+                        
+        #print(mRNA_list)
         for i in range (10):
                           
             np.random.shuffle(mRNA_list)         # List wird durch shuffle gemischt
@@ -87,6 +90,7 @@ class Translation(processes.Process):
                 prot = self.move(mrna)
 
                 if isinstance(prot, molecules.Protein):     # storing the protein in the states-dictionary
+                    #print('creation of protein')
                     if prot.name in model.states:
                         model.states[prot.name].append(prot)
                     else:
@@ -102,7 +106,7 @@ class Translation(processes.Process):
             mrna.sequence_triplet_binding[0] = 'R'          # !Jens! codon wird 'R', Teil des Ribosomes binden an 0. Stelle binden!
 
             if mrna.sequence[0:3]=='AUG':                   # if first codon is START codon -> initiate
-                self.initiate(mrna, 1)
+                self.initiate(mrna, 0)
                 
             self.ribosomes.count -= 1  # remove bound ribosome from list of free ribosomes
 
@@ -122,7 +126,7 @@ class Translation(processes.Process):
         for i in pos:  # iterate through all ribosome/protein positions  
             
             if i == len(mrna.sequence_triplet_binding)-1: # wenn das Ende der mRNA erreicht ist (letztes codon)
-                self.entkoppeln(mrna, i)
+                self.setfree(mrna, i)
                 self.ribosomes.count += 1   # und erhöht die Menge freier Ribosomen um 1
                 continue                                                           
             
@@ -162,6 +166,7 @@ class Translation(processes.Process):
 
         @type return: Protein or False
         """
+        print('elongation')
         if isinstance(mrna.sequence_triplet_binding[i], molecules.Protein):  
 
             codon = mrna[i * 3:i * 3 + 3]
@@ -175,9 +180,10 @@ class Translation(processes.Process):
 
             if mrna.sequence_triplet_binding[i + 1] == 0:  # if the next rna position is free
 
-                mrna.sequence_triplet_binding[i] += aa       
+                mrna.sequence_triplet_binding[i] += aa  
+                print(mrna.sequence_triplet_binding[i].sequence)   
                 self.occupy(mrna, i+1)                      # nächste Stelle besetzten durch ocupyfunction
-
+              
         return 0
     def terminate(self, mrna, i):
         """
@@ -185,12 +191,12 @@ class Translation(processes.Process):
         """
       
         protein = mrna.sequence_triplet_binding[i]  # bound mRNA
-        self.entkoppeln(mrna,i)
+        self.setfree(mrna,i)
         self.ribosomes.count += 1
         # put proteins in lists (state)
         return protein  
 
-    def entkoppeln(self, mrna, i):      
+    def setfree(self, mrna, i):      
         if i < 10:
             k=0
             while k <= i:                             #entkoppelt alles von anfang an

@@ -15,9 +15,9 @@ import random
 # koordination mit Transkription
 
 class Chromosome:
-    def __init__(self, name, sequence):
+    def __init__(self, id, sequence):
         self.sequence = sequence
-        self.name = name
+        self.id = id
         self.replication_ori_bound = False # beginnt ungebunden, 
         # da in der Replikation erstmal die Helikase und die Polymerase binden müssen 
         # > Initiationsbedingung
@@ -66,6 +66,7 @@ class Replication(Process):
                 self.initiate(old_chromosome) 
             elif old_chromosome.replication_ori_bound: #and not transcription an der Stelle:
                 self.elongate(old_chromosome)
+                if return 
             elif (self.polymerase.count == 0 or self.helicase.count == 0) and \
              not old_chromosome.replication_ori_bound and not self.duplication[old_chromosome.id]:
                 continue
@@ -112,12 +113,12 @@ class Replication(Process):
         #leitet die Termination ein und returned die neue Sequence
 
         if len(new_chrom.sequence) == 0:
-            sequence_to_replicate = old_chrom.sequence[0:100]
+            sequence_to_replicate = old_chrom.sequence[0:200000]
             # Bindung checken für 100-200 usw.
-        elif len(old_chrom.sequence) - len(new_chrom.sequence) > 100:
-            sequence_to_replicate = old_chrom.sequence[len(new_chrom.sequence):len(new_chrom.sequence)+100]
+        elif len(old_chrom.sequence) - len(new_chrom.sequence) > 200000:
+            sequence_to_replicate = old_chrom.sequence[len(new_chrom.sequence):len(new_chrom.sequence)+200000]
         elif len(old_chrom.sequence) - len(new_chrom.sequence) == 0:
-            return self.terminate(new_chrom.sequence)
+            return self.terminate(new_chrom)
         else:
             sequence_to_replicate = old_chrom.sequence[len(new_chrom.sequence):]
         
@@ -149,12 +150,12 @@ class Replication(Process):
         #print(len(new_chrom.sequence))
 
         
-    def terminate(self, chrom, i):   
+    def terminate(self, new_chrom):   
         
-        self.polymerase += 1
-        self.helicase += 1
-        self.duplication[chrom.id] = True
-        chrom.replication_ori_bound = False
+        self.polymerase.count += 1
+        self.helicase.count += 1
+        self.duplication[new_chrom.id] = True
+        new_chrom.replication_ori_bound = False
 
         return new_chrom
        

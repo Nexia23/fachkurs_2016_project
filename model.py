@@ -136,8 +136,19 @@ class Model:
             if log:  # This could be an entry point for further logging
 
                 #print all states
-                print('\r{}'.format([self.states[x] for x in self.states.keys() ], end=''))
+                #print('\r{}'.format([self.states[x] for x in self.states.keys() ], end=''))
+                #print([self.states[x] for x in self.states.keys()])
+                print(self.states.keys())
+                a = 0
+                for i in self.states.keys():
+                	if str(i).isdigit():
+                		a = 1+a
+                print("Die Anzahl der Chromosomen nach " + str(s) + " update Schritten beträgt " + str(a))
 
+                keylist = self.states.keys()
+                keylist = [str(x) for x in keylist]
+                
+                print([x for x in keylist if "mRNA" in x])
 
 
 if __name__ == "__main__":

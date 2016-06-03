@@ -43,8 +43,8 @@ class BioMolecule:
         else:
             self.__mass = value
 
-    def __repr__(self): #string "self.name,type"		#print(list(object))
-        return ','.join([self.name, str(type(self))])
+    def __repr__(self): #string "self.name"		#print(list(object))
+        return self.name
 
    # def __str__(self):	#print(object)
         # todo: each class should have something like this
@@ -231,14 +231,10 @@ class Chromosome:
     gene.sequence -> gives the sequence of the chromosome
     gene.revsequence -> gives out the reverse sequence of the chromosome
     """
-<<<<<<< HEAD
-    def __init__(self, mid, name,  arf, fastaname):
-        self._mid=mid
-=======
-    def __init__(self, id,  arf, fastaname):
+
+    def __init__(self, id, name,  arf, fastaname):
         self._id=id
-        self.name = id # chromosome name is same as id
->>>>>>> f4a56623e688add816268eeb416c8b7df76cb545
+        self._name = name # chromosome name is same as id
         self._fastaname=fastaname
         self._arf = arf
         self._name = name
@@ -278,13 +274,13 @@ class Chromosome:
     #getter für id, sequence & revsequence
 
     @property
-    def mid(self):
-        return self._mid
-    @mid.setter
+    def id(self):
+        return self._id
+    @id.setter
     def mid(self, value):
         if not isinstance(value, int):
             raise TypeError("MID must be an Integer.")
-        self._mid = value
+        self._id = value
         
     @property
     def sequence(self):

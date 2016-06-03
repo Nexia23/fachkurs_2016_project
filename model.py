@@ -124,7 +124,8 @@ class Model:
             self.step()
             
             if log:  # This could be an entry point for further logging
-                print(self.states.keys())    # print count of each protein to the screen
+                print(self.states.keys())
+                print([len(self.states[x]) for x in self.states.keys() if "mRNA" in x])    # print count of each protein to the screen
                	print('\r{}'.format([len(self.states[x]) for x in self.states.keys() if "Protein" in x], end=''))
 
 
@@ -133,7 +134,7 @@ if __name__ == "__main__":
     c = Model()
     #for g in list(c.genes.keys())[0:100]:
     #    print(c.genes[g].transrate)
-    c.simulate(15, log=True)
+    c.simulate(5, log=True)
     #for g in list(c.genes.keys()):
     #	if c.genes[g].pol_on_gene:
     #		print(c.genes[g].pol_on_gene)

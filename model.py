@@ -125,4 +125,4 @@ class Model:
 
 if __name__ == "__main__":
     c = Model()
-    c.simulate(15, log=True)
+    c.simulate(300, log=True)

@@ -69,7 +69,7 @@ class Model:
     def __initialize_macromolecules(self):
         self.ribosomes = {'Ribosomes': mol.Ribosome('Ribos', 'Ribosomes', 187000)}
         self.polymerase2= mol.RNAPolymeraseII('Pol2', 'Polymerase2', 100000000)
-        self.nucleotides= mol.NucleotidPool('Nucs','Nucleotides', 100000)
+        self.nucleotides= mol.NucleotidPool('Nucs','Nucleotides', 1000000000000)
         self.helicases = {'DnaB': rep.Helicase("Helicase", "DnaB", 100)}
         self.polymerases = {'Polymerase3' :rep.Polymerase("Polymerase", "Polymerase3", 100)}
         self.chromosomes = {x.id:x for x in modeldata.ModelData.createchromosomes()}
@@ -101,20 +101,20 @@ class Model:
         """
         
         # transcription
-        trsc = transcription.Transcription(0, 'Transcription')
-        trsc.set_states(self.genes.keys(), self.polymerase2)
-        self.processes["Transkription"] = trsc
+        #trsc = transcription.Transcription(0, 'Transcription')
+        #trsc.set_states(self.genes.keys(), self.polymerase2)
+        #self.processes["Transkription"] = trsc
 
         # translation
-        trsl = translation.Translation(1, "Translation")
-        trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
-        self.processes["Translation"] = trsl
+        #trsl = translation.Translation(1, "Translation")
+        #trsl.set_states(self.mrnas.keys(), self.ribosomes.keys())           #states in Process are keys: Rib_name, mrna_name?!
+        #self.processes["Translation"] = trsl
 
         # replication
-        #repl =rep.Replication(2, "Replication")
-        #replication_enzyme_ids= list(self.helicases.keys()).extend(list(self.polymerases.keys()))
-        #repl.set_states(list(self.chromosomes.keys()), replication_enzyme_ids)
-        #self.processes.update({"Replication":repl})
+        repl =rep.Replication(2, "Replication")
+        replication_enzyme_ids= list(self.helicases.keys()).extend(list(self.polymerases.keys()))
+        repl.set_states(list(self.chromosomes.keys()), replication_enzyme_ids)
+        self.processes.update({"Replication":repl})
 
 
     def step(self):
@@ -144,6 +144,7 @@ class Model:
             if log:  # This could be an entry point for further logging
 
                 #print all states
+<<<<<<< HEAD
                 #print('\r{}'.format([self.states[x] for x in self.states.keys() ], end=''))
                 #print([self.states[x] for x in self.states.keys()])
                 print(self.states.keys())
@@ -157,6 +158,10 @@ class Model:
                 keylist = [str(x) for x in keylist]
                 
                 print([x for x in keylist if "mRNA" in x])
+=======
+                print('\r{}'.format([self.states[x] for x in self.states.keys() ], end=''))
+              
+>>>>>>> 55fe414fa51a67c9a5a27b11eef92d9da609640f
 
 
 if __name__ == "__main__":
